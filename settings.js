@@ -9,6 +9,6 @@ var Settings = {
 	fontSize: 12,
 	fontFamily: "Tahoma",
 	
-	standAlone: true
+	standAlone: false
 
 };

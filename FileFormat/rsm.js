@@ -791,8 +791,6 @@ RSM.prototype.parse = function( buffer ) {
 		}
 	}
 	
-	// todo: get data using buffer:
-	
 	if( this.header.version.compareTo( 1, 5 ) >= 0 ) {
 		
 		this.globalPosKeyFrameCount = data.getInt32( p, true );

@@ -16,7 +16,12 @@
 		<script src="Tables/AccessoryIdTable.js"></script>
 		<script src="Tables/AccessoryNameTable.js"></script>
 		<script src="Tables/HeadIdTable.js"></script>
+		
 		<script src="SoundPlayer.js"></script>
+		
+		<script src="InputEventHandler.js"></script>
+		
+		<script src="graphics/include/BoundingBox.js"></script>
 		
 		<script src="FileFormat/rsm.js"></script>
 		<script src="FileFormat/gat.js"></script>
@@ -27,7 +32,8 @@
 		
 		<script src="include/three.58.js"></script>
 		<script src="include/ReusableRay.js"></script>
-		<script src="include/CustomControls.js"></script>
+		
+		<script src="RagnarokControls.js"></script>
 		
 		<script src="Deferred.js"></script>
 		
@@ -47,10 +53,11 @@
 	html, body {
 		width: 100%;
 		height: 100%;
+		background: #000000;
 	}
 	
 	body {
-		background: url("load_kr/loading02.jpg") no-repeat center center fixed;
+		background: url("load_kr/loading02.edit.jpg") center center fixed;
 		background-size: cover;
 	}
 	
@@ -120,141 +127,6 @@ window.onload = function() {
 };
 
 var start = function() {
-	
-	//<script>
-	
-	//var width = window.innerWidth;
-	//var height = window.innerHeight;
-	
-	//var renderer = this.renderer = new THREE.WebGLRenderer({
-	//	antialias: true
-	//});
-	
-	//var scene = this.scene = new THREE.Scene();
-	
-	//var viewAngle = 45;
-	//var viewAngle = -340;
-	//var viewAngle = 20;
-	
-	//var camera = this.camera = new THREE.PerspectiveCamera( viewAngle, width / height, 0.1, 10000 );
-	
-	//renderer.setClearColor(0x000000);
-	
-	//renderer.setSize(width, height);
-	
-	//var a = new THREE.AxisHelper();
-	
-	//a.scale = new THREE.Vector3(100, 100, 100);
-	
-	//scene.add(a);
-	
-	//camera.position.set(0, 20, 20);
-	//camera.lookAt(new THREE.Vector3(0,0,0));
-	
-	//var geometry = new THREE.Geometry();
-	//var warpGeometry = new THREE.SphereGeometry(10, 20, 20);
-	
-	//for(var p = 0, d = 0; d < 4; d++) {
-	//	for(i = 0; i < 360; i += 30) {
-			
-	//		var x0 = Math.cos(i * Math.PI / 180);
-	//		var y0 = Math.sin(i * Math.PI / 180);
-	//		var x1 = Math.cos((i + 30) * Math.PI / 180);
-	//		var y1 = Math.sin((i + 30) * Math.PI / 180);
-			
-	//		var r = d * 2.0;
-	//		var h = 0.5;
-			
-	//		geometry.vertices.push(new THREE.Vector3(x0 * d, 0, y0 * d));
-	//		geometry.vertices.push(new THREE.Vector3(x0 * r, h, y0 * r));
-	//		geometry.vertices.push(new THREE.Vector3(x1 * r, h, y1 * r));
-	//		geometry.vertices.push(new THREE.Vector3(x1 * d, 0, y1 * d));
-			
-	//		var face = new THREE.Face4(p, p + 1, p + 2, p + 3);
-			
-	//		geometry.faceVertexUvs[0].push([
-	//			new THREE.Vector2( 0, 0 ),
-	//			new THREE.Vector2( 0, 1 ),
-	//			new THREE.Vector2( 1, 1 ),
-	//			new THREE.Vector2( 1, 0 )
-	//		]);
-			
-	//		geometry.faces.push(face);
-			
-	//		p += 4;
-			
-	//	}
-	//}
-	
-	//geometry.faceVertexUvs[1] = geometry.faceVertexUvs[0];
-	
-	//var material = new THREE.MeshBasicMaterial({
-	//	transparent: true,
-		//color: 0xff0000,
-	//	side: THREE.DoubleSide,
-		//opacity: 0.5,
-	//	alphaTest: 0.5,
-	//	map: ResourceLoader.getTexture("effect/ring_blue.png"),
-		//map: ResourceLoader.getTexture("effect/alpha_down.png"),
-	//})
-	
-	//var mesh = new THREE.Mesh(geometry, material);
-	
-	//scene.add(mesh);
-	
-	//setInterval(function() {
-	//	mesh.rotation.y += 0.01;
-	//	mesh.scale.z -= 0.01;
-	//	mesh.scale.x -= 0.01;
-	//	if(mesh.scale.z < 0) mesh.scale.z = 1.0;
-	//	if(mesh.scale.x < 0) mesh.scale.x = 1.0;
-		
-	//}, 25);
-	
-	//(function animate() {
-	//	requestAnimationFrame(animate);
-	//	renderer.render(scene, camera);
-	//})();
-	
-	//document.body.appendChild(renderer.domElement);
-	
-	//return;
-	
-//SpriteActor.prototype.SetAttachment = function(attachmentType, sprFileObject, actFileObject) {
-//SpriteActor.prototype.addAttachmentToScene = function(scene, attachmentType) {
-	
-	//ResourceLoader.createFile = function(dirName, fileName, fileData, type);
-	//ResourceLoader.getFile = function(dirName, fileName, returnType);
-	/*
-	ResourceLoader.ready
-		.then(ResourceLoader.createFile.bind(null, 
-			"test", 
-			"test.txt", 
-			"data data data", 
-			"text/plain"
-		))
-		.then(function(status) {
-			
-			console.log(status);
-			
-			if(status) {
-			
-				ResourceLoader.getFile("test", "test.txt", "text")
-					.then(function(data) {
-						console.log(data);
-					});
-			
-			}
-			
-		});
-	
-	return;
-	*/
-	//ResourceLoader.getRsm("´ÏÇÃÇìÀÓ/´ÏÇÃÇìÀÓ-¸¶³à¼º01.rsm").then(function(data) {
-	//	RsmMesh(new RSM(data));
-	//});
-	
-	//return;
 		
 	window.document.body.innerHTML = "\
 		<div id='b_loading' style='position: absolute; top: 50%; left: 50%; width: 64px; height: 64px; margin-left: -32px; margin-top: -32px;'>\
@@ -269,12 +141,17 @@ var start = function() {
 	
 	var obj = new SpriteActor(mapLoader);
 	
+	obj.name = "curiosity";
+	
 	var start = Date.now();
 	
 	var mapName = location.href.match(/map=([\w\d_]+.rsw)/i);
 	
+	
+	var eventHandler = new InputEventHandler( window.document );
+	
 	mapLoader
-		.loadMap((mapName !== null && mapName[1]) || "te_prt_gld.rsw")
+		.loadMap((mapName !== null && mapName[1]) || "payon.rsw")
 		.then(function(d) {
 			
 			console.log("Info: Loading finished in " + (Date.now() - start) + "ms");
@@ -289,24 +166,37 @@ var start = function() {
 			//SoundPlayer.playBGM(mp3NameTable[mapLoader.getMapName()]);
 			
 			// Set position
-			obj.SetGatPosition(44, 136);
+			//obj.SetGatPosition(44, 136);
+			obj.SetGatPosition(262, 85);
 			
 			window.s = obj;
 			
 			// Bind camera to player
 			mapLoader.bindCamera(obj);
+			
+			// Setup events
+			
+			eventHandler.attachEventListener("mousemove", mapLoader.mouseMoveEvent );
+			eventHandler.attachEventListener("mouseup", mapLoader.mouseUpEvent );
+			
 		})
 		
-		.then(lol.bind(this, obj, "sprite/ÀÎ°£Á·/¸öÅë/³²/»óÀÎ_³²", SpriteActor.Attachment.BODY))
-		.then(lol.bind(this, obj, "sprite/ÀÎ°£Á·/¸Ó¸®Åë/³²/7_³²", SpriteActor.Attachment.HEAD))
+		.then(lol.bind(this, obj, "sprite/ÀÎ°£Á·/¸öÅë/³²/" + ClassResNameTable[14] + "_³²", SpriteActor.Attachment.BODY))
+		.then(lol.bind(this, obj, "sprite/ÀÎ°£Á·/¸Ó¸®Åë/³²/" + HeadIdTable[1][ parseInt(Math.random() * HeadIdTable[1].length ) ] + "_³²", SpriteActor.Attachment.HEAD))
 		.then(lol.bind(this, obj, "sprite/shadow", SpriteActor.Attachment.SHADOW))
 		//.then(lol.bind(this, obj, "sprite/¾Ç¼¼»ç¸®/³²/³²_Åä³¢¸Ó¸®¶ì", SpriteActor.Attachment.TOP))
 		.then(function() {
 			
-			settop(AccessoryIdTable.ACCESSORY_SAHT_GAHT);
+			//settop(AccessoryIdTable.ACCESSORY_SAHT_GAHT);
 			setmid(AccessoryIdTable.ACCESSORY_ELF_SUNGLASS);
+			//settop(AccessoryIdTable.ACCESSORY_HELM)
+			settop(AccessoryIdTable.ACCESSORY_ANGEL_MIXHELM)
+			//setmid(AccessoryIdTable.ACCESSORY_FIN_HELM)
 			
 			setInterval(function() {
+			
+				//console.log(mapLoader.camera);
+			
 				obj.Update(mapLoader.camera);
 			}, 10);
 		

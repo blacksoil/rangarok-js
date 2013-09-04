@@ -202,15 +202,6 @@ function RSW( buffer ) {
 			
 				// sound source
 				
-				//name			80			(char[80])
-				//waveName		80			(char[80])
-				//pos			12			(vector3d)
-				//vol			4			(float)
-				//width			4			(int)
-				//height		4			(int)
-				//range			4			(float)
-				//cycle			4			(float) (default 4.0)
-				
 				sound = {
 					type: type,
 					name: data.getString( offset, 80 ),
@@ -235,18 +226,24 @@ function RSW( buffer ) {
 			} else if( type == 4 ) {
 				// effect source
 				
-				//name			80			(char[80])
-				//pos			12			(vector3d)
-				//type			4			(int)
-				//emitSpeed		4			(float)
-				//param			16			(float[4])
+				this.objects.push({
+					type: type,
+					name: data.getString( offset, 80 ),
+					position: data.getVector3( offset + 80 ),
+					effectType: data.getInt32( offset + 92, true ),
+					emitSpeed: data.getFloat32( offset + 96, true ),
+					param: [
+						data.getFloat32( offset + 100, true ),
+						data.getFloat32( offset + 104, true ),
+						data.getFloat32( offset + 108, true ),
+						data.getFloat32( offset + 112, true )
+					]
+				});
 				
 				offset += ( 80 + 12 + 4 + 4 + 16 );
 				
-				this.objects.push({
-					type: type
-				});
-				
+			} else {
+				throw "RSW: Unknown type";
 			}
 			
 		}
