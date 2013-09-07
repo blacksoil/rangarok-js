@@ -7,6 +7,12 @@ var InputEvent = function() {
 	this.button = -1;
 };
 
+InputEvent.Button = {
+	LEFT: 0,
+	MIDDLE: 1,
+	RIGHT: 2
+};
+
 var InputEventHandler = function( document ) {
 
 	EventHandler.call( this );
@@ -27,8 +33,9 @@ InputEventHandler.prototype._fireEvent = function(event, value) {
 			
 			if(typeof listeners[i] == "function") {
 				
-				if( listeners[i](value) )
+				if( listeners[i](value) === true ) {
 					break;
+				}
 				
 			}
 		}

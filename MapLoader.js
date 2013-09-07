@@ -38,7 +38,7 @@ MapLoader.prototype.reset = function() {
 	this.mousePickingIntervalKey = null;
 	this.mouseGatPosition = new THREE.Vector2(0, 0);
 	
-	this.colorPickingInterval = 1000 / 10;
+	this.colorPickingInterval = 1000 / 5;
 	this.colorPickingFocusObjectId = 0;
 	
 	this.focusActiveActor = null;
@@ -62,9 +62,8 @@ MapLoader.WorldMesh = {
 };
 
 MapLoader.prototype.registerWorldComponent = function(type, mesh) {
-
+	
 	if(type == MapLoader.WorldMesh.MODEL) {
-		console.warn("REGISTERING COMPONENT", mesh);
 		this._worldComponents[type].push(mesh);
 	} else {
 		this._worldComponents[type] = mesh;
@@ -196,8 +195,6 @@ MapLoader.prototype.generateAtlasTexture = function(textureNameList) {
 			var t = new THREE.Texture(canvas);
 			t.needsUpdate = true;
 			t.flipY = false;
-			
-			console.log("ADDING TEXTURE!!!", aId, t, atlasData);
 			
 			atlasData.textures.push(t);
 			
@@ -519,9 +516,9 @@ MapLoader.prototype.setupModelTextures = function() {
 	return batch.finally((function(atlasData) {
 		
 		if(loadedFromDisk)
-			console.log("Loaded texture atlas from disk in " + atlasData.textures.length + " files");
+			console.log("Info: Loaded texture atlas from disk in " + atlasData.textures.length + " files");
 		else 
-			console.log("Created texture atlas from remote files");
+			console.log("Info: Done processing texture atlas from remote files");
 			
 		this.rsmAtlasObject = atlasData;
 		
@@ -562,8 +559,6 @@ MapLoader.prototype.createGround = function() {
 	materials.push(new THREE.MeshBasicMaterial({ color: 0xff0000 }));
 	
 	var gndMaterialOffset = 1;
-	
-	console.log("CREATING GROUND", this.gndFileObject, this.gatFileObject);
 	
 	for( var i = 0; i < this.gndFileObject.textures.length; i++ ) {
 		
@@ -769,8 +764,6 @@ MapLoader.prototype.createGround = function() {
 		0, 0, 0, 1
 	) );
 	
-	console.log(groundGeometry);
-	
 	groundGeometry.dynamic = false;
 		
 	var mesh = new THREE.Mesh(groundGeometry, new THREE.MeshFaceMaterial(materials));
@@ -798,10 +791,167 @@ MapLoader.prototype.createGround = function() {
 	
 };
 
+var CoordinatePointer = function() {
+	
+	var geometry;
+	
+	geometry = new THREE.Geometry();
+	geometry.dynamic = true;
+	
+	var h = 1 / 9;
+	var w = 1 / 3;
+	
+	var f = geometry.faces;
+	var v = geometry.vertices;
+	
+	// TOP LEFT CORNER
+	
+	v.push( new THREE.Vector3( 0, 0, 0 ) ); // top left
+	v.push( new THREE.Vector3( w, 0, 0 ) ); // top right
+	v.push( new THREE.Vector3( w, h, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 0, h, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 0, 1, 2, 3 ) );
+	
+	v.push( new THREE.Vector3( 0, h, 0 ) ); // top left
+	v.push( new THREE.Vector3( h, h, 0 ) ); // top right
+	v.push( new THREE.Vector3( h, w, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 0, w, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 4, 5, 6, 7 ));
+	
+	// TOP RIGHT CORNER
+	v.push( new THREE.Vector3( 1 - w, 0, 0 ) ); // top left
+	v.push( new THREE.Vector3( 1, 0, 0 ) ); // top right
+	v.push( new THREE.Vector3( 1, h, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 1 - w, h, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 8, 9, 10, 11 ) );
+	
+	v.push( new THREE.Vector3( 1 - h, h, 0 ) ); // top left
+	v.push( new THREE.Vector3( 1, h, 0 ) ); // top right
+	v.push( new THREE.Vector3( 1, w, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 1 - h, w, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 12, 13, 14, 15 ) );
+	
+	// BOTTOM RIGHT CORNER
+	v.push( new THREE.Vector3( 1 - w, 1 - h, 0 ) ); // top left
+	v.push( new THREE.Vector3( 1, 1 - h, 0 ) ); // top right
+	v.push( new THREE.Vector3( 1, 1, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 1 - w, 1, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 16, 17, 18, 19 ) );
+	
+	v.push( new THREE.Vector3( 1 - h, 1 - w, 0 ) ); // top left
+	v.push( new THREE.Vector3( 1, 1 - w, 0 ) ); // top right
+	v.push( new THREE.Vector3( 1, 1 - h, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 1 - h, 1 - h, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 20, 21, 22, 23 ) );
+	
+	// BOTTOM LEFT CORNER
+	v.push( new THREE.Vector3( 0, 1 - h ) ); // top left
+	v.push( new THREE.Vector3( w, 1 - h ) ); // top right
+	v.push( new THREE.Vector3( w, 1, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 0, 1, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 24, 25, 26, 27 ) );
+	
+	v.push( new THREE.Vector3( 0, 1 - w ) ); // top left
+	v.push( new THREE.Vector3( h, 1 - w ) ); // top right
+	v.push( new THREE.Vector3( h, 1 - h, 0 ) ); // bottom right
+	v.push( new THREE.Vector3( 0, 1 - h, 0 ) ); // bottom left
+	f.push( new THREE.Face4( 28, 29, 30, 31 ) );
+	
+	this.h = h;
+	this.w = w;
+	
+	this.geometry = geometry;
+	
+	this._last = {
+		h0: 0,
+		h1: 0,
+		h2: 0,
+		h3: 0
+	};
+	
+	this.mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+		color: 0x30E0A0, // 0x2ddb9d?
+		opacity: 0.5,
+		transparent: true,
+		side: THREE.DoubleSide
+	}));
+	
+	this.mesh.frustumCulled = false;
+	
+};
+
+CoordinatePointer.prototype.setElevation = function( gatBlock ) {
+	
+	gatBlock = gatBlock || {};
+	
+	var h0 = gatBlock.upperLeftHeight || 0;
+	var h1 = gatBlock.upperRightHeight || 0;
+	var h2 = gatBlock.lowerLeftHeight || 0;
+	var h3 = gatBlock.lowerRightHeight || 0;
+	
+	if(	this._last.h0 == h0 && this._last.h1 == h1 &&
+		this._last.h2 == h2 && this._last.h3 == h3 ) {
+		// Skip if this tile block has same heights as the previous one
+		return;
+	}
+	
+	var v = this.geometry.vertices;
+	
+	var s, t, p, h;
+	
+	for(var i = 0; i < v.length; i++) {
+	
+		s = v[i].x;
+		t = v[i].y;
+		
+		if(s + t <= 1.0) {
+			
+			p = h0;
+			h = p + s * ( h1 - p ) + t * ( h2 - p );
+			
+		} else {
+
+			s = 1 - s;
+			t = 1 - t;
+
+			p = h3;
+			h = p + s * ( h2 - p ) + t * ( h1 - p );
+			
+		}
+		
+		v[i].z = -h;
+
+	}
+	
+	this.geometry.verticesNeedUpdate = true;
+	
+	this._last.h0 = h0;
+	this._last.h1 = h1;
+	this._last.h2 = h2;
+	this._last.h3 = h3;
+	
+};
+
 
 MapLoader.prototype.createCoordinatePointer = function() {
 
-	var len = this.gndFileObject.header.zoom / 2;
+	this.coordinatePointer = new CoordinatePointer();
+
+	//this.coordinatePointer = this.COORD.mesh;
+	
+	this.coordinatePointer.mesh.applyMatrix( new THREE.Matrix4(
+		0.5 * this.gndFileObject.header.zoom, 0, 0, 0,
+		0, 0, 1, 0,
+		0, 0.5 * this.gndFileObject.header.zoom, 0, 0,
+		0, 0, 0, 1
+	) );
+	
+	this.registerWorldComponent(MapLoader.WorldMesh.COORDPOINTER, this.coordinatePointer.mesh);
+	
+
+	return;
+
+	var len = 1 / 2;
 	
 	var geo = new THREE.Geometry();
 	
@@ -866,19 +1016,19 @@ MapLoader.prototype.createCoordinatePointer = function() {
 	v.push( new THREE.Vector3( 0, len - h, 0 ) ); // bottom left
 	f.push( new THREE.Face4( 28, 29, 30, 31 ) );
 	
-	geo.applyMatrix( new THREE.Matrix4(
-		1, 0, 0, 0,
-		0, 0, 1, 0,
-		0, 1, 0, 0,
-		0, 0, 0, 1
-	) );
-	
 	this.coordinatePointer = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
-		color: 0x2ddb9d,
+		color: 0x30E0A0, // 0x2ddb9d?
 		opacity: 0.5,
 		transparent: true,
 		side: THREE.DoubleSide
 	}));
+	
+	this.coordinatePointer.applyMatrix( new THREE.Matrix4(
+		this.gndFileObject.header.zoom, 0, 0, 0,
+		0, 0, 1, 0,
+		0, this.gndFileObject.header.zoom, 0, 0,
+		0, 0, 0, 1
+	) );
 
 	this.registerWorldComponent(MapLoader.WorldMesh.COORDPOINTER, this.coordinatePointer);
 
@@ -1440,7 +1590,7 @@ MapLoader.prototype.setupWorld = function() {
 	
 	//Tick("Creating coordinate pointer");
 	
-	this.scene.add(this.coordinatePointer);
+	this.scene.add(this.coordinatePointer.mesh);
 	
 	this.setupWorldLighting();
 
@@ -1449,8 +1599,6 @@ MapLoader.prototype.setupWorld = function() {
 };
 
 MapLoader.prototype.setupScene = function() {
-
-	console.log('Loading scene!');
 	
 	var width = window.innerWidth;
 	var height = window.innerHeight;
@@ -1497,20 +1645,12 @@ MapLoader.prototype.positionToMapCoordinate = function(v) {
 	);
 };
 
-MapLoader.prototype.mapCoordinateToPosition = function(x, y) {
-	return new THREE.Vector3(
-		(x << 0) * this.gndFileObject.header.zoom,
-		0,
-		-((y << 0) + 1.0 ) * this.gndFileObject.header.zoom
-	);
-};
-
 // GAT x,y coordinates to world position
-MapLoader.prototype.mapCoordinateToPosition2 = function(x, y) {
+MapLoader.prototype.mapCoordinateToPosition = function(x, y) {
 	return new THREE.Vector3(
 		x/2 * this.gndFileObject.header.zoom,
 		0,
-		-(y/2+1) * this.gndFileObject.header.zoom
+		-(y/2) * this.gndFileObject.header.zoom
 	);
 };
 
@@ -1519,6 +1659,15 @@ MapLoader.prototype.mapCoordinateToPosition2 = function(x, y) {
 MapLoader.prototype.subGatPositionToMapHeight = function(x, y, s, t) {
 
 	var block = this.gatFileObject.getBlock(x, y);
+	
+	if(!block) {
+		return 0;
+	}
+	
+	if(block.upperLeftHeight == block.upperRightHeight 
+		== block.lowerLeftHeight == block.lowerRightHeight ) {
+		return block.upperLeftHeight;
+	}
 	
 	// upperLeft
 	// + ---- + -upperRight
@@ -1533,7 +1682,7 @@ MapLoader.prototype.subGatPositionToMapHeight = function(x, y, s, t) {
 	var origin;
 	var height;
 	
-	if(s, t <= 1.0) {
+	if(s + t <= 1.0) {
 		
 		origin = block.upperLeftHeight;
 		height = origin + s * (block.upperRightHeight - origin) + t * ( block.lowerLeftHeight - origin );
@@ -1678,30 +1827,6 @@ MapLoader.prototype.OnMouseMove = function( e ) {
 	
 	this.setMousePosition( e.x, e.y );
 	
-	var curr = this.getActorInFocus();
-	var prev = this.getActiveActor();
-	
-	if( curr !== null ) {
-		
-		if( curr !== prev ) {
-			
-			curr.showNameLabel();
-			
-			if( prev !== null ) {
-				prev.hideNameLabel();
-			}
-			
-			this.setActiveActor( curr );
-		}
-		
-	} else if( prev !== null ) {
-		
-		this.setActiveActor( null );
-		
-		prev.hideNameLabel();
-		
-	}
-	
 	// Update the camera controls
 	this.controls.OnMouseMove( e );
 	
@@ -1715,13 +1840,94 @@ MapLoader.prototype.OnMouseUp = function( e ) {
 		
 		this.controls.DisableRotation();
 		
-	};
+	} else if( e.button == 0 ) {
+		this.movementTimeStamp = false;
+		this.movementGatLocation = false;
+		
+	}
+	
 	
 };
+
+MapLoader.prototype.moveToMouseLocation = function() {
+	
+	this.movementTimeStamp = Date.now();
+	this.movementGatLocation = this.mouseGatPosition.clone();
+	
+	this.controls.target.MoveToGatPosition(this.mouseGatPosition.x, this.mouseGatPosition.y);
+	
+	setTimeout((function() {
+	
+		if(this.movementTimeStamp && this.movementGatLocation) {
+			if(Date.now() - this.movementTimeStamp >= 400) {			
+				//if(this.mouseGatPosition.x != this.movementGatLocation.x
+				//	&& this.mouseGatPosition.y != this.movementGatLocation.y)
+					this.moveToMouseLocation();
+				//else {
+				//	console.log("Position is same as before");
+				//}
+			} else {
+				//console.warn("Several movement timers?");
+			}
+		}
+		
+	}).bind( this ), 500);
+	
+	
+};
+
+MapLoader.prototype.OnMouseDown = function( e ) {
+	
+	if( e.button === InputEvent.Button.RIGHT ) {
+		
+		this.controls.EnableRotation();
+		
+	} else if(e.button === InputEvent.Button.LEFT ) {
+	
+		// Clicking on a SpriteActor
+		if(this.colorPickingFocusObjectId > 0) {
+			console.log(this.colorPickingFocusObjectId);
+			return;
+		}
+	
+		console.log(this.mouseGatPosition.x, this.mouseGatPosition.y);
+		
+		// move camera target
+		if( this.controls.target != null ) {
+			
+			if(this.gatFileObject.hasProperty(this.mouseGatPosition.x, this.mouseGatPosition.y, GAT.BlockProperties.WALKABLE)) {
+				this._fireEvent("OnPCRequestMove", this.mouseGatPosition.clone());
+			}
+			
+			if( e.shift ) {
+				// Teleport
+				this.controls.target.SetGatPosition(this.mouseGatPosition.x, this.mouseGatPosition.y);
+			} else {
+				// Walk to position
+				//console.log("Walking there from " + this.controls.target.gatPosition.x + ", " + this.controls.target.gatPosition.y);
+				this.moveToMouseLocation();
+			}
+			
+		}
+		
+	}
+		
+};
+
 
 MapLoader.prototype.start = function() {
 	
 	this.controls = new RagnarokControls( this.camera, this.renderer.domElement );
+	
+	if(IndoorRswTable[ this.getMapName() ] === true) {
+	
+		var toRad = Math.PI / 180;
+		
+		this.controls.SetRotationRange(
+			115 * toRad, 150 * toRad
+		);
+	}
+	
 	
 	document.body.oncontextmenu = function(e) {
 		e.stopPropagation();
@@ -1736,49 +1942,17 @@ MapLoader.prototype.start = function() {
 	
 	this.mouseMoveEvent = this.OnMouseMove.bind( this );
 	this.mouseUpEvent = this.OnMouseUp.bind( this );
-	
-	window.addEventListener('mousedown', (function(e) {
-		
-		if(e.button == 0) {
-		
-			// Clicking on a SpriteActor
-			if(this.colorPickingFocusObjectId > 0) {
-				console.log(this.colorPickingFocusObjectId);
-				return;
-			}
-		
-			console.log(this.mouseGatPosition.x, this.mouseGatPosition.y);
-			
-			// move camera target
-			if( this.controls.target != null ) {
-				
-				if(this.gatFileObject.hasProperty(this.mouseGatPosition.x, this.mouseGatPosition.y, GAT.BlockProperties.WALKABLE)) {
-					this._fireEvent("OnPCRequestMove", this.mouseGatPosition.clone());
-				}
-				
-				if(e.shiftKey) {
-					// Teleport
-					this.controls.target.SetGatPosition(this.mouseGatPosition.x, this.mouseGatPosition.y);
-				} else {
-					// Walk to position
-					this.controls.target.MoveToGatPosition(this.mouseGatPosition.x, this.mouseGatPosition.y);
-				}
-				
-			}
-			
-		} else if(e.button == 2) {
-			
-			this.controls.EnableRotation();
-			
-		}
-		
-	}).bind(this));
+	this.mouseDownEvent = this.OnMouseDown.bind( this );
 
 
 	// Append to DOM
+	
+	this.renderer.domElement.style.position = "fixed";
+	this.renderer.domElement.style.top = "0px";
+	this.renderer.domElement.style.left = "0px";
+	this.renderer.domElement.style.zIndex = "1";
+	
 	document.body.appendChild(this.renderer.domElement);
-
-	console.log("Starting to render " + this.worldResourceName);
 	
 	this.running = true;
 	
@@ -1819,6 +1993,8 @@ MapLoader.prototype.start = function() {
         var c2x = 0;
         var c2z = 0;
         
+        var cxd, czd, cxm, czm;
+        
         var cpt = new THREE.Vector3;
         
 		for (var i = 0 ; i < max ; i++) {
@@ -1829,35 +2005,51 @@ MapLoader.prototype.start = function() {
 				start.z + unit.z * i
              );
              
-             cx = (cpt.x / this.gndFileObject.header.zoom) << 0;
-             cz = (cpt.z / -this.gndFileObject.header.zoom) << 0;
-             c2x = (cpt.x / this.gndFileObject.header.zoom) - cx;
-             c2z = (cpt.z / -this.gndFileObject.header.zoom) - cz;
+             cx = 2 * cpt.x / this.gndFileObject.header.zoom;
+             cz = -2 * cpt.z / this.gndFileObject.header.zoom;
              
-             var tile = this.gatFileObject.getBlock(2*cx, 2*cz);
+             cxd = cx << 0;
+             czd = cz << 0;
+             
+             cxm = cx - cxd;
+             czm = cz - czd;
+             
+             var tile = this.gatFileObject.getBlock( cxd, czd );
              
              if( tile ) {
-				var h = - this.gatFileObject.getBlockAvgDepth( 2*cx, 2*cz );
-				if( Math.abs(h - cpt.y) < 0.5)
+				
+				//var h = - this.gatFileObject.getBlockAvgDepth( cxd, czd );
+				var h = - this.subGatPositionToMapHeight( cxd, czd, cxm, czm );
+				
+				if( Math.abs(h - cpt.y) < 0.5 )
 					break;
              }
         }
          
-        var x = 2*cx;
-        var z = 2*cz - 1;
-         
-		// Adjust for error margin
-		if( Math.abs(c2x) > 0.5 ) x += 1;
-		if( Math.abs(c2z) > 0.5 ) z += 1;
+        var x = cxd;
+        var z = czd;
+        
+		// Get distance of picked cell from our current cells
 		
-		if( Math.abs( this.mouseGatPosition.x - x ) > 40 
-			|| Math.abs( this.mouseGatPosition.y - z ) > 40 ) {
-			// Ignore result if picked cell is too far away
+		var distX0 = this.mouseGatPosition.x - x; // pointer
+		var distY0 = this.mouseGatPosition.y - z;
+		var distX1 = this.controls.target.gatPosition.x - x; // player
+		var distY1 = this.controls.target.gatPosition.y - z;
+		
+		var maxDist = 60 / this.controls.zoom;
+		
+		if( ( distX0 * distX0 + distY0 * distY0 > maxDist * maxDist ) && ( distX1 * distX1 + distY1 * distY1 > maxDist * maxDist ) ) {
+			// Ignore result if picked cell is too far away from current pointer location and player
+			return;
+		}
+		
+		if(this.mouseGatPosition.x == x && this.mouseGatPosition.y == z) {
+			// Same tile as before. No need to do more
 			return;
 		}
 		
 		this.mouseGatPosition.x = x;
-		this.mouseGatPosition.y = z + 1;
+		this.mouseGatPosition.y = z;
 		
 		// Set coordinate pointer		
 		if(this.gatFileObject.getBlock(this.mouseGatPosition.x, this.mouseGatPosition.y)) {
@@ -1869,10 +2061,18 @@ MapLoader.prototype.start = function() {
 			))
 				return;
 			
-			this.coordinatePointer.position = this.mapCoordinateToPosition2(x, z);
+			//this.coordinatePointer.position = this.mapCoordinateToPosition(x, z);
+			
+			var coord = this.mapCoordinateToPosition(x, z);
+			
+			this.coordinatePointer.mesh.position.x = coord.x;
+			this.coordinatePointer.mesh.position.y = 1.0;
+			this.coordinatePointer.mesh.position.z = coord.z;
+			
+			this.coordinatePointer.setElevation( this.gatFileObject.getBlock(x, z) );
 			
 			// Adjust so it's a little above ground :)
-			this.coordinatePointer.position.y -= this.gatFileObject.getBlockAvgDepth(this.mouseGatPosition.x, this.mouseGatPosition.y) - 0.5;
+			//this.coordinatePointer.mesh.position.y -= this.gatFileObject.getBlockAvgDepth(this.mouseGatPosition.x, this.mouseGatPosition.y) - 0.5;
 			
 			//coordPointer.geometry.vertices[0].y = -tile.lowerLeftHeight; // top left
 			//coordPointer.geometry.vertices[1].y = -tile.lowerRightHeight; // top right
@@ -1888,36 +2088,40 @@ MapLoader.prototype.start = function() {
 	var lastColorPick = Date.now();
 	var colorPick = true;
 	
-	(function animate() {
+	console.log("Info: Welcome to " + this.worldResourceName);
+	
+	var animate;
+	
+	animate = (function() {
 		
 		var now = Date.now()
 		var dt = now - last;
 		//controls.update( dt*0.01 );
 		last = now;
 		
-		if(ref.running) {
+		if(this.running) {
 			
-			ref.controls.Update( dt );
+			this.controls.Update( dt );
 			
-			ref.renderer.render(ref.scene, ref.camera);
+			this.renderer.render(this.scene, this.camera);
 			
-			if(colorPick && now - lastColorPick >= ref.colorPickingInterval) {
+			if(colorPick && now - lastColorPick >= this.colorPickingInterval) {
 			
 				//console.log("color picking");
 			
 				mapLoader.setWorldDisplay(false); // hide all world objects
 				THREE.Sprite.PickingMode = 1; // uuugh -_-"
 				
-				var gl = ref.renderer.getContext();
+				var gl = this.renderer.getContext();
 				
-				ref.renderer.render(ref.scene, ref.camera, ref.colorPickingRenderTarget);
+				this.renderer.render(this.scene, this.camera, this.colorPickingRenderTarget);
 				
 				var u32 = new Uint8Array(4);
 				
 				// #ICEICE PICK
 				gl.readPixels(
-					ref.mouse2.x, 
-					ref.colorPickingRenderTarget.height - ref.mouse2.y,
+					this.mouse2.x, 
+					this.colorPickingRenderTarget.height - this.mouse2.y,
 					1, 1, 
 					gl.RGBA, 
 					gl.UNSIGNED_BYTE, 
@@ -1926,19 +2130,49 @@ MapLoader.prototype.start = function() {
 				
 				var id = (u32[0] << 16) | (u32[1] << 8) | (u32[2]);
 				
-				ref.colorPickingFocusObjectId = id;
+				this.colorPickingFocusObjectId = id;
 				
 				mapLoader.setWorldDisplay(true); // restore world objects
 				THREE.Sprite.PickingMode = 0;
 				
 				lastColorPick = now;
+				
+				// Swap focus on actors
+				
+				var curr = this.getActorInFocus();
+				var prev = this.getActiveActor();
+				
+				if( curr !== null ) {
+					
+					if( curr !== prev ) {
+						
+						curr.showNameLabel();
+						
+						if( prev !== null ) {
+							prev.hideNameLabel();
+						}
+						
+						this.setActiveActor( curr );
+					}
+					
+				} else if( prev !== null ) {
+					
+					this.setActiveActor( null );
+					
+					prev.hideNameLabel();
+					
+				}
+				
+				// 
+				
 			}
-			
 			
 			requestAnimationFrame(animate);
 		}
 		
-	})();
+	}).bind(this);
+
+	animate();
 
 };
 

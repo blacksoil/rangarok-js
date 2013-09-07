@@ -249,7 +249,6 @@ function RSW( buffer ) {
 		}
 		
 		if( this.header.version.compareTo(2, 1) >= 0 ) {
-			console.log('RSW :: File contains a quad tree');
 			
 			//{ * 1365 (4^0 + 4^1 + 4^2 + 4^3 + 4^4 + 4^5, quadtree with 6 levels, depth-first ordering)
 			//	[ QuadTreeNode ]
@@ -261,6 +260,7 @@ function RSW( buffer ) {
 			//	center			12			(vector3d)
 			//}
 			
+			// Skipping this for now ...
 		
 		}
 		

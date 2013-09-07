@@ -7,6 +7,8 @@ var RagnarokControls = function( camera, domElement ) {
 	
 	this.rotation = Math.PI / 2;
 	this.rotationSpeed = 0;
+	this.rotationMin = 0;
+	this.rotationMax = 2 * Math.PI;
 	
 	this.zoom = RagnarokControls.ZoomTargetMin;
 	this.targetZoom = 1.0;
@@ -75,6 +77,12 @@ RagnarokControls.prototype.DisableRotation = function() {
 	this.isRotating = false;
 };
 
+RagnarokControls.prototype.SetRotationRange = function(min, max) {
+	// Indoor ; 115 - 150
+	this.rotationMin = min;
+	this.rotationMax = max;
+};
+
 RagnarokControls.prototype.Zoom = function( delta ) {
 	
 	this.targetZoom += delta * RagnarokControls.ScrollSensitivity;
@@ -113,8 +121,28 @@ RagnarokControls.prototype.Update = function( dt ) {
 		
 		// Update rotation
 		
+		//if( this.rotationMax < 2 * Math.PI && this.rotationSpeed > 0 ) {
+		//	this.rotation *= Math.min(1.0, Math.log(this.rotationMax - this.rotation) );
+		//}
+		
 		this.rotationSpeed *= RagnarokControls.RotDampening;
-		this.rotation += r * this.rotationSpeed;
+		this.rotation = ( this.rotation + r * this.rotationSpeed ) % (2 * Math.PI);
+		
+		if(this.rotation < 0) {
+			this.rotation += 2 * Math.PI;
+		}
+		
+		//if( this.rotation > this.rotationMax ) {
+		//	this.rotation *= 0.99;
+		//}
+		
+		//if( this.rotation < this.rotationMin ) {
+		//	this.rotation *= 1.01;
+		//}
+		
+		
+		this.rotation = Math.min( this.rotation, this.rotationMax );
+		this.rotation = Math.max( this.rotation, this.rotationMin );
 		
 		// Update position
 		

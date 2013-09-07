@@ -781,8 +781,7 @@ RSM.prototype.parse = function( buffer ) {
 		if( parentNode !== undefined ) {
 			
 			if( parentNode === node ) {
-				console.error( 'Error: Mesh', node.name, 'is it\'s own parent in', this,
-					'(read ' + p + '/' + buffer.byteLength +' bytes)');
+				console.warn('RSM: Mesh "', node.name, '" is it\'s own parent.', this);
 				continue;
 			}
 			

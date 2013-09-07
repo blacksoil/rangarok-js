@@ -1,5 +1,7 @@
 var SpriteActor = function(mapInstance, name) {
 	
+	EventHandler.call(this);
+	
 	this.mapInstance = mapInstance;
 	
 	this.attachments = {};
@@ -43,6 +45,8 @@ var SpriteActor = function(mapInstance, name) {
 	
 	
 };
+
+SpriteActor.prototype = Object.create(EventHandler.prototype);
 
 SpriteActor.CSpriteScale = 0.54857;
 
@@ -154,6 +158,7 @@ SpriteActor.prototype.__defineSetter__("gatPosition", function(value) {
 	
 	this.position.copy(this.gatToMapPosition(this._gatPosition));
 	
+	this._fireEvent("OnGatPositionChange", this.gatPosition);
 	
 	
 	//this.lightLevel = 0.5 + 0.5 * this.mapInstance.getGatTileLightLevel(this._gatPosition.x, this._gatPosition.y);
@@ -250,18 +255,35 @@ SpriteActor.prototype.getDirectionChange = function(srcNode, dstNode) {
 
 }
 
-SpriteActor.prototype.gatToMapPosition = function( cellPosition ) {
+/**
+ * Get the 3D scene position in the center of a GAT node
+ *
+ * @param {THREE.Vector2} position - GAT tile position
+ * @returns {THREE.Vector3} - Map position
+ *
+ */
+
+SpriteActor.prototype.gatToMapPosition = function( position ) {
 	
-	var v = this.mapInstance.mapCoordinateToPosition2( cellPosition.x + 0.5, cellPosition.y - 1.5 );
+	var v = this.mapInstance.mapCoordinateToPosition( position.x + 0.5, position.y + 0.5 );
 	
 	//v.y = -this.mapInstance.gatFileObject.getBlockAvgDepth(this.gatPosition.x, this.gatPosition.y) + 0.5; // currentGatPosition
 	
 	// Get height in the middle of the GAT cell
-	v.y = -this.mapInstance.subGatPositionToMapHeight( cellPosition.x, cellPosition.y, 0.5, 0.5 ) + 0.5;
+	v.y = -this.mapInstance.subGatPositionToMapHeight( position.x, position.y, 0.5, 0.5 ) + 0.5;
 	
 	return v;
 };
 
+/**
+ * Get the 3D scene position in-betweeen to neighboring GAT nodes.
+ *
+ * @param {THREE.Vector2} srcPosition - Source GAT tile 
+ * @param {THREE.Vector2} dstPosition - Destination GAT tile
+ * @param {float} weight - Blending weight in range [0, 1].
+ * @returns {THREE.Vector3} - Map position
+ *
+ */
 SpriteActor.prototype.mixNodePositionsToMapCoordinate = function(srcPosition, dstPosition, weight) {
 	
 	var s = 0.5, t = 0.5; // Middle of cell
@@ -739,17 +761,24 @@ SpriteActor.prototype.UpdateAttachment = function(deltaTime, attachmentType, mot
 	
 	// Check if we can update the current frame
 	
-	var delay = 0;
+	var delay = 1;
+	
+	// if attacking, use aMotion
+	// if walking, use aMotion or speed?
 	
 	if(this.action == SpriteActor.Actions.WALK) {
-		delay = this.movementSpeed / actFileObject.delays[this.motion];
+		delay = this.movementSpeed / actFileObject.delays[motion];
 	} else {
-		delay = actFileObject.delays[this.motion] * 25;
+		delay = actFileObject.delays[motion] * 25;
 	}
 	
-	while(attachment.timeElapsed >= delay) {
-		attachment.frameId = (attachment.frameId + 1) % actFileObject.actions[this.motion].length;
+	delay = Math.max(1, delay);
+	
+	if(attachment.timeElapsed >= delay) {
+		
+		attachment.frameId = (attachment.frameId + 1) % actFileObject.actions[motion].length;
 		attachment.timeElapsed = attachment.timeElapsed % delay;
+		
 	}
 	
 };
