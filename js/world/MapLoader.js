@@ -27,7 +27,7 @@ MapLoader.prototype.reset = function() {
 	
 	this.rsmAtlasObject = null;
 	
-	this.rsmFileObjectTotal = 0;
+	this.rswModelObjectsTotal = 0;
 	this.rsmFileObjectLoaded = 0;
 	
 	this.running = false;
@@ -794,148 +794,6 @@ MapLoader.prototype.createGround = function() {
 	
 };
 
-var CoordinatePointer = function() {
-	
-	var geometry;
-	
-	geometry = new THREE.Geometry();
-	geometry.dynamic = true;
-	
-	var h = 1 / 9;
-	var w = 1 / 3;
-	
-	var f = geometry.faces;
-	var v = geometry.vertices;
-	
-	// TOP LEFT CORNER
-	
-	v.push( new THREE.Vector3( 0, 0, 0 ) ); // top left
-	v.push( new THREE.Vector3( w, 0, 0 ) ); // top right
-	v.push( new THREE.Vector3( w, h, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 0, h, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 0, 1, 2, 3 ) );
-	
-	v.push( new THREE.Vector3( 0, h, 0 ) ); // top left
-	v.push( new THREE.Vector3( h, h, 0 ) ); // top right
-	v.push( new THREE.Vector3( h, w, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 0, w, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 4, 5, 6, 7 ));
-	
-	// TOP RIGHT CORNER
-	v.push( new THREE.Vector3( 1 - w, 0, 0 ) ); // top left
-	v.push( new THREE.Vector3( 1, 0, 0 ) ); // top right
-	v.push( new THREE.Vector3( 1, h, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 1 - w, h, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 8, 9, 10, 11 ) );
-	
-	v.push( new THREE.Vector3( 1 - h, h, 0 ) ); // top left
-	v.push( new THREE.Vector3( 1, h, 0 ) ); // top right
-	v.push( new THREE.Vector3( 1, w, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 1 - h, w, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 12, 13, 14, 15 ) );
-	
-	// BOTTOM RIGHT CORNER
-	v.push( new THREE.Vector3( 1 - w, 1 - h, 0 ) ); // top left
-	v.push( new THREE.Vector3( 1, 1 - h, 0 ) ); // top right
-	v.push( new THREE.Vector3( 1, 1, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 1 - w, 1, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 16, 17, 18, 19 ) );
-	
-	v.push( new THREE.Vector3( 1 - h, 1 - w, 0 ) ); // top left
-	v.push( new THREE.Vector3( 1, 1 - w, 0 ) ); // top right
-	v.push( new THREE.Vector3( 1, 1 - h, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 1 - h, 1 - h, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 20, 21, 22, 23 ) );
-	
-	// BOTTOM LEFT CORNER
-	v.push( new THREE.Vector3( 0, 1 - h ) ); // top left
-	v.push( new THREE.Vector3( w, 1 - h ) ); // top right
-	v.push( new THREE.Vector3( w, 1, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 0, 1, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 24, 25, 26, 27 ) );
-	
-	v.push( new THREE.Vector3( 0, 1 - w ) ); // top left
-	v.push( new THREE.Vector3( h, 1 - w ) ); // top right
-	v.push( new THREE.Vector3( h, 1 - h, 0 ) ); // bottom right
-	v.push( new THREE.Vector3( 0, 1 - h, 0 ) ); // bottom left
-	f.push( new THREE.Face4( 28, 29, 30, 31 ) );
-	
-	this.h = h;
-	this.w = w;
-	
-	this.geometry = geometry;
-	
-	this._last = {
-		h0: 0,
-		h1: 0,
-		h2: 0,
-		h3: 0
-	};
-	
-	this.mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-		color: 0x30E0A0, // 0x2ddb9d?
-		opacity: 0.5,
-		transparent: true,
-		side: THREE.DoubleSide
-	}));
-	
-	this.mesh.frustumCulled = false;
-	
-};
-
-CoordinatePointer.prototype.setElevation = function( gatBlock ) {
-	
-	gatBlock = gatBlock || {};
-	
-	var h0 = gatBlock.upperLeftHeight || 0;
-	var h1 = gatBlock.upperRightHeight || 0;
-	var h2 = gatBlock.lowerLeftHeight || 0;
-	var h3 = gatBlock.lowerRightHeight || 0;
-	
-	if(	this._last.h0 == h0 && this._last.h1 == h1 &&
-		this._last.h2 == h2 && this._last.h3 == h3 ) {
-		// Skip if this tile block has same heights as the previous one
-		return;
-	}
-	
-	var v = this.geometry.vertices;
-	
-	var s, t, p, h;
-	
-	for(var i = 0; i < v.length; i++) {
-	
-		s = v[i].x;
-		t = v[i].y;
-		
-		if(s + t <= 1.0) {
-			
-			p = h0;
-			h = p + s * ( h1 - p ) + t * ( h2 - p );
-			
-		} else {
-
-			s = 1 - s;
-			t = 1 - t;
-
-			p = h3;
-			h = p + s * ( h2 - p ) + t * ( h1 - p );
-			
-		}
-		
-		v[i].z = -h;
-
-	}
-	
-	this.geometry.verticesNeedUpdate = true;
-	
-	this._last.h0 = h0;
-	this._last.h1 = h1;
-	this._last.h2 = h2;
-	this._last.h3 = h3;
-	
-};
-
-
 MapLoader.prototype.createCoordinatePointer = function() {
 
 	this.coordinatePointer = new CoordinatePointer();
@@ -1201,24 +1059,17 @@ MapLoader.prototype.rsmMeshCalculateBoundingBox = function(rsmFile) {
 MapLoader.prototype.createRsmMesh = function(rsmFile, rsmNode) {
 	
 	var geometry;
+	var gID = rsmFile.header.name + "_" + rsmNode.name;
 	
-	var geometryIdentifier = rsmFile.header.name + "_" + rsmNode.name;
-	
-	if(this._rsmNodeGeometries.has(geometryIdentifier)) {
-	
-		//console.log(0, geometryIdentifier)
-		geometry = this._rsmNodeGeometries.get(geometryIdentifier);
-	
-	
+	if(this._rsmNodeGeometries.has(gID)) {
+		
+		geometry = this._rsmNodeGeometries.get(gID);
+			
 	} else {
-		//console.log(1, geometryIdentifier)
 	
-	
-	var geometry = new THREE.Geometry();
+	geometry = new THREE.Geometry();
 	
 	// Calculate
-	
-	//console.log(rsmFile, rsmNode);
 	
 	// Add vertices
 	for(var i = 0; i < rsmNode.vertices.length; i++) {
@@ -1288,8 +1139,6 @@ MapLoader.prototype.createRsmMesh = function(rsmFile, rsmNode) {
 		
 		
 	}
-	
-	//var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(this.rsmAtlasObject.materials));
 	
 	var matrix = new THREE.Matrix4;
 	
@@ -1425,7 +1274,7 @@ MapLoader.prototype.createRsmMesh = function(rsmFile, rsmNode) {
 	// Apply transformation last to have affect normals
 	geometry.applyMatrix(matrix);
 	
-	this._rsmNodeGeometries.set(geometryIdentifier, geometry);
+	this._rsmNodeGeometries.set(gID, geometry);
 	
 	}
 		
@@ -1444,7 +1293,7 @@ MapLoader.prototype.createRsmMesh = function(rsmFile, rsmNode) {
 
 MapLoader.prototype.createWorldModel = function(rswModelData, rsmFile) {
 	
-	rsmFile.header.name = rswModelData.name;
+	rsmFile.header.name = rswModelData.modelName;
 	
 	var rswMatrix = new THREE.Matrix4;
 	
@@ -1458,8 +1307,8 @@ MapLoader.prototype.createWorldModel = function(rswModelData, rsmFile) {
 	);
 	
 	var translation = (new THREE.Matrix4).makeTranslation(
-		rswModelData.position[0],	
-		rswModelData.position[1], 
+		rswModelData.position[0],
+		rswModelData.position[1],
 		rswModelData.position[2]
 	)
 	
@@ -1485,9 +1334,11 @@ MapLoader.prototype.createWorldModel = function(rswModelData, rsmFile) {
 	
 	//var a = (new THREE.Matrix4).makeTranslation(Math.random() * 10000, 0, - 100 - Math.random() * 10000);
 	
+	var rsmStaticGeometry = new THREE.Geometry;
+	
 	for(var i = 0; i < meshes.length; i++) {
 		
-		meshes[i].applyMatrix(rswMatrix);
+		THREE.GeometryUtils.merge(rsmStaticGeometry, meshes[i]);
 		
 		//meshes[i].computeFaceNormals();
 		//meshes[i].computeVertexNormals();
@@ -1497,8 +1348,10 @@ MapLoader.prototype.createWorldModel = function(rswModelData, rsmFile) {
 		//	new THREE.MeshFaceMaterial(this.rsmAtlasObject.materials)
 		//));
 		
-		THREE.GeometryUtils.merge(this.staticResourceGeometry, meshes[i]);
 	}
+	
+	rsmStaticGeometry.applyMatrix(rswMatrix);
+	THREE.GeometryUtils.merge(this.staticResourceGeometry, rsmStaticGeometry);
 	
 	if(MapLoader.DEBUG.DisplayBoundingBox) {
 		var geometry = new THREE.CubeGeometry( 
@@ -2329,25 +2182,35 @@ MapLoader.prototype.loadMap = function(worldResourceName) {
 						
 				if(this.rswFileObject.objects[i].type == 1 ) {
 					
+					this.rswModelObjectsTotal++;
+					
 					var name = this.rswFileObject.objects[i].modelName;
 					
-					rsmLoader.then(ResourceLoader.getRsm.bind(this, name)).then(
-						(function(thisArg, name) {
-							return (function(data) {
-								this.rsmFileObjectLoaded++;
-								if(!this.rsmFileObjects.has(name)) {
-									this.rsmFileObjects.set(name, new RSM(data));
-								}
-							}).bind(thisArg);
-						})(this, name)
-					);
+					// Indicate loading
+					
+					if(this.rsmFileObjects.has(name))
+						continue;
+										
+					var t = ResourceLoader.getProcessedFileObject(ResourceLoader.FileType.RSM, name).then((function(_name) {
+						
+						return (function(rsm) {
+							
+							this.rsmFileObjectLoaded++;
+							this.rsmFileObjects.set(_name, rsm);
+						
+						}).bind(this);
+					
+					}).call(this, name));
+					
+					rsmLoader.then(t);
+					
 				}
 				
 			}
 			
 			rsmLoader.finally((function() {
 				console.log("Info: All RSMs are loaded!");
-				console.log( "%cInfo: Loaded " + (this.rsmFileObjectLoaded) + " distinct resource models", "color: #9999ff" );
+				console.log( "%cInfo: Loaded " + (this.rsmFileObjectLoaded) + " distinct resource models (" + this.rswModelObjectsTotal + " total)", "color: #9999ff" );
 				pipe.success(true);
 			}).bind( this ));
 			
