@@ -130,6 +130,32 @@ SceneManager.prototype.SetActorMovementSpeed = function(actor, value) {
 	
 };
 
+SceneManager.prototype.KillEntity = function(GID) {
+
+	var entity;
+	
+	if(this.entityMap.has(GID)) {
+		
+		entity = this.entityMap.get(GID);
+		
+		entity.Die();
+		
+		if(entity.type != SpriteActor.Types.PLAYER) {
+			
+			// Players shouldn't be removed when they die
+			this.RemoveEntity(GID);
+		
+		}
+		
+		
+	} else {
+		
+		console.warn("SceneManager: Killing non-existant entity");
+		
+	}
+
+};
+
 // Add a new actor entity to the scene
 SceneManager.prototype.AddEntity = function(GID, charInfo) {
 	

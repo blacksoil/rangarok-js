@@ -23,7 +23,7 @@ var SpriteActor = function(mapInstance, name) {
 	
 	this._isMoving = false;
 	this._cancelMove = false;
-	
+		
 	this.movementSpeed = 150;
 	this.lastUpdate = -1;
 	this.movementTime = 0;
@@ -77,7 +77,7 @@ SpriteActor.Types = {
 };
 
 // Monster actions
-SpriteActor.Actions = {
+SpriteActor.BaseActionIndices = {
 	STAND: 0,
 	WALK: 1,
 	ATTACK: 2,
@@ -85,7 +85,7 @@ SpriteActor.Actions = {
 	DIE: 4
 };
 
-SpriteActor.PlayerActions = {
+SpriteActor.PlayerActionIndices = {
 	STAND: 0,
 	WALK: 1,
 	SIT: 2,
@@ -130,6 +130,20 @@ SpriteActor.AttachmentPriority = {
 	5: 200, // BOTTOM
 };
 
+SpriteActor.prototype.Die = function() {
+
+	this.Action = this.ActionSet.DIE;
+
+};
+
+SpriteActor.prototype.__defineGetter__('ActionSet', function() {
+
+	if(this.type == SpriteActor.Types.PLAYER)
+		return SpriteActor.PlayerActionIndices;
+	
+	return SpriteActor.BaseActionIndices;
+});
+
 SpriteActor.prototype.__defineGetter__('Action', function() {
 	return this.action;
 });
@@ -162,9 +176,9 @@ SpriteActor.prototype.__defineGetter__("isMoving", function() {
 
 SpriteActor.prototype.__defineSetter__("isMoving", function(value) {
 	if(value) {
-		this.Action = SpriteActor.Actions.WALK;
+		this.Action = this.ActionSet.WALK;
 	} else {
-		this.Action = SpriteActor.Actions.STAND;
+		this.Action = this.ActionSet.STAND;
 	}
 	this._isMoving = value;
 });
@@ -663,7 +677,12 @@ SpriteActor.prototype.SetAttachment = function(attachmentType, sprFileObject, ac
 		this.RemoveAttachment(attachmentType);
 	}
 	
-	var attachment = new SpriteActorAttachment(this.zGroup, sprFileObject, actFileObject);
+	var gID = this.zGroup;
+	
+	if(attachmentType == SpriteActor.Attachment.SHADOW)
+		gID = 0;
+	
+	var attachment = new SpriteActorAttachment(gID, sprFileObject, actFileObject);
 	
 	
 	this.attachments[attachmentType] = attachment;
@@ -832,7 +851,7 @@ SpriteActor.prototype.UpdateAttachment = function(deltaTime, attachmentType, mot
 	// if attacking, use aMotion
 	// if walking, use aMotion or speed?
 	
-	if(this.action == SpriteActor.Actions.WALK) {
+	if(this.action == this.ActionSet.WALK) {
 		//delay = 2 * this.movementSpeed / actFileObject.delays[motion];
 		delay = 2 * 10 * actFileObject.delays[motion] * (this.movementSpeed / 150);
 	} else {

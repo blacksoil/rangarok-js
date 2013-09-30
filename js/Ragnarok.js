@@ -246,6 +246,16 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 		
 	}).bind(this));
 	
+	this.session.attachEventListener("OnActorDie", (function(session_actor) {
+		
+		console.warn("Actor died");
+		
+		this.graphics.scene.KillEntity(
+			session_actor.GID
+		);
+		
+	}).bind(this));
+	
 	this.session.attachEventListener("OnActorVanish", (function(session_actor) {
 		
 		console.warn("Actor vanished");

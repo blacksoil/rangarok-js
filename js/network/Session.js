@@ -147,6 +147,19 @@ ROSession.prototype.GetActor = function(GID) {
 	return this.actors.get(GID);
 };
 
+ROSession.prototype.KillActor = function(GID) {
+
+	if(!this.actors.has(GID)) {
+		console.warn("ROSession: Dying actor doesn't exist!");
+		return;
+	}
+
+	var actor = this.actors.get(GID);
+
+	this._fireEvent("OnActorDie", actor);
+
+};
+
 ROSession.prototype.SpawnActor = function(GID, charInfo) {
 	
 	var actor;

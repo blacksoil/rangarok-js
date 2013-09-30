@@ -221,7 +221,12 @@ var PacketEventHandlers = [
 	
 	[["PACKET_ZC_NOTIFY_VANISH"], function( struct ) {
 	
-		this.VanishActor(struct.GID);
+		if(struct.type == 1) {
+			this.KillActor(struct.GID);
+		} else {
+			this.VanishActor(struct.GID);
+		}
+	
 	
 	}],
 	

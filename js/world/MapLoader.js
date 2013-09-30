@@ -196,6 +196,10 @@ MapLoader.prototype.generateAtlasTexture = function(textureNameList) {
 			// Create texture
 			
 			var t = new THREE.Texture(canvas);
+			
+			t.minFilter = THREE.LinearFilter;
+			t.magFilter = THREE.NearestFilter;
+			
 			t.needsUpdate = true;
 			t.flipY = false;
 			
@@ -1485,7 +1489,7 @@ MapLoader.prototype.setupScene = function() {
 	
 	var renderer = this.renderer = new THREE.WebGLRenderer({
 		antialias: true,
-		precision: "lowp"
+		//precision: "lowp"
 	});
 	
 	var scene = this.scene = new THREE.Scene();
