@@ -103,6 +103,7 @@ ResourceLoader.getDirectory = function(dirName) {
 	return p;
 };
 
+// Get file from the temporary web storage
 ResourceLoader.getFile = function(dirName, fileName, returnType) {
 	
 	var p = new Deferred();
@@ -218,9 +219,30 @@ ResourceLoader.escapeRemotePath = function(fileName) {
 	return name;
 };
 
+ResourceLoader.files = new Map();
+ResourceLoader.processing = new Map();
+ResourceLoader.requests = new Map();
+
 ResourceLoader.getLocalFile = function( fileName ) {
 
 	var filePromise = new Deferred();
+	
+	if(ResourceLoader.processing.has(fileName)) {
+		
+		var reqs = ResourceLoader.requests.get(fileName);
+		
+		reqs.push(filePromise);
+		
+		ResourceLoader.requests.set(fileName, reqs);
+		
+		return filePromise;
+		
+	} else {
+		
+		ResourceLoader.processing.set(fileName, true);
+		ResourceLoader.requests.set(fileName, [filePromise]);
+		
+	}
 	
 	var toArrayBuffer = function( buffer ) {
 	
@@ -246,7 +268,16 @@ ResourceLoader.getLocalFile = function( fileName ) {
 		}
 		
 		if(data !== undefined) {
-			filePromise.success( toArrayBuffer(data) );
+			
+			var reqs = ResourceLoader.requests.get(fileName);
+			
+			for(var i = 0; i < reqs.length; i++) {
+				reqs[i].success( toArrayBuffer(data) );
+			}
+			
+			ResourceLoader.requests.delete(fileName);
+			ResourceLoader.processing.delete(fileName);
+		
 		} else {
 			console.error("ResourceLoader: Read file success but no data");
 		}
@@ -339,6 +370,7 @@ ResourceLoader.FileFormatParser = {};
 
 ResourceLoader.FileFormatParser[ ResourceLoader.FileType.SPR ] = SprParser;
 ResourceLoader.FileFormatParser[ ResourceLoader.FileType.ACT ] = ActParser;
+ResourceLoader.FileFormatParser[ ResourceLoader.FileType.RSM ] = RSM;
 
 ResourceLoader.getBinaryFileData = function(fileType, pathName) {
 	
@@ -361,8 +393,11 @@ ResourceLoader.getBinaryFileData = function(fileType, pathName) {
 };
 
 ResourceLoader._processedFileObjects = new Map();
+ResourceLoader._processedFileRequests = new Map();
 
 ResourceLoader.getProcessedFileObject = function(fileType, pathName) {
+	
+	
 	
 	return ResourceLoader.getBinaryFileData(fileType, pathName)
 		
