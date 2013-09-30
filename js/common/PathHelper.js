@@ -10,6 +10,9 @@ var PathHelper = {
 	monsterPath: "¸ó½ºÅÍ",
 	npcPath: "npc",
 	
+	// Missing NPCs defaults to this
+	defaultBodyResName: "sprite/¸ó½ºÅÍ/dark_priest",
+	
 	assetFolder: "assets",
 	loginInterfacePath: "assets/login_interface",
 	basicInterfacePath: "assets/basic_interface",
@@ -111,6 +114,10 @@ var PathHelper = {
 		
 	getMonsterResName: function( monster_id ) {
 	
+		if(!(monster_id in JobNameTable)) {
+			return PathHelper.defaultBodyResName;
+		}
+	
 		return PathHelper.createPath(
 			PathHelper.spritePath,
 			PathHelper.monsterPath,
@@ -120,6 +127,10 @@ var PathHelper = {
 	},
 	
 	getNpcResName: function( npc_id ) {
+	
+		if(!(npc_id in JobNameTable)) {
+			return PathHelper.defaultBodyResName;
+		}
 	
 		return PathHelper.createPath(
 			PathHelper.spritePath,
