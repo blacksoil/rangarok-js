@@ -326,14 +326,27 @@ Ragnarok.prototype.loadSceneAfter = function() {
 	
 	this.graphics.scene.bindActorToCamera(this.session.pc.GID);
 	
-	// Update player position
+	// Update entity positions 
+	// Needs to be done as entities can't currently be positioned while 
+	// the map is still loading
 	
-	this.graphics.scene.SetEntityPosition(
-		this.session.pc.GID,
-		this.session.pc.actor.x,
-		this.session.pc.actor.y
-	);
+	var entities = this.graphics.scene.entityList;
 	
+	for(var i = 0; i < entities.length; i++) {
+		
+		// TODO: Issue if actor is walking?
+		
+		var GID = entities[i];
+		var charInfo = this.session.GetActor(GID);
+		
+		this.graphics.scene.SetEntityPosition(
+			GID,
+			charInfo.x,
+			charInfo.y
+		);
+		
+	}
+		
 	// Display interface
 
 	this.graphics.gui.clearBackground();
@@ -404,6 +417,8 @@ Ragnarok.prototype.onStateChangeMap = function() {
 Ragnarok.prototype.onStateLoadMap = function() {
 	
 	console.log('Info: Map is now ' + this.session.GetMapName());
+	
+	this.graphics.gui.showBackground();
 	
 	this.createMainInterface();
 	

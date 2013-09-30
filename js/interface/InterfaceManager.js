@@ -77,6 +77,8 @@ InterfaceManager.prototype.init = function() {
 	this.__hoverObject = null;
 	
 	this.__background = null;
+	this.__backgroundVisible = false;
+	this.__backgroundReady = false;
 	
 	this.domElement.width = window.innerWidth;
 	this.domElement.height = window.innerHeight;
@@ -96,7 +98,7 @@ InterfaceManager.prototype.refresh = function( clear ) {
 	
 	if( clear === true ) {
 		
-		if( this.__backgroundReady && this.__background !== null ) {
+		if( this.__backgroundReady && this.__backgroundVisible ) {
 			
 			this.ctx.drawImage(
 				this.__background,
@@ -129,6 +131,7 @@ InterfaceManager.prototype.setBackground = function( uri ) {
 	}
 	
 	this.__background = new Image;
+	this.__backgroundVisible = true;
 	this.__backgroundReady = false;
 	
 	this.__background.onload = (function() {
@@ -141,7 +144,12 @@ InterfaceManager.prototype.setBackground = function( uri ) {
 };
 
 InterfaceManager.prototype.clearBackground = function() {
-	this.__background = null;
+	this.__backgroundVisible = false;
+	this.refresh( true );
+};
+
+InterfaceManager.prototype.showBackground = function() {
+	this.__backgroundVisible = true;
 	this.refresh( true );
 };
 
