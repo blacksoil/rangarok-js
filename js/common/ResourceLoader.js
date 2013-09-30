@@ -392,31 +392,51 @@ ResourceLoader.getBinaryFileData = function(fileType, pathName) {
 	
 };
 
-ResourceLoader._processedFileObjects = new Map();
 ResourceLoader._processedFileRequests = new Map();
+ResourceLoader._processedFileObjects = new Map();
 
 ResourceLoader.getProcessedFileObject = function(fileType, pathName) {
 	
+	var task = new Deferred();
 	
+	var id = pathName + "_" + fileType;
 	
-	return ResourceLoader.getBinaryFileData(fileType, pathName)
+	if(ResourceLoader._processedFileRequests.has(id)) {
+	
+		if(ResourceLoader._processedFileObjects.has(id)) {
+			task.success(
+				ResourceLoader._processedFileObjects.get(id)
+			);
+		} else {		
+			var req = ResourceLoader._processedFileRequests.get(id);
+			req.push(task);
+		}
+		
+		return task;
+	}
+	
+	ResourceLoader._processedFileRequests.set(id, [task]);
+	
+	ResourceLoader.getBinaryFileData(fileType, pathName)
 		
 		.then(function(data) {
 			
-			var fId = fileType + pathName;
+			var reqs = ResourceLoader._processedFileRequests.get(id);
 			
-			if(ResourceLoader._processedFileObjects.has(fId)) {
-				return ResourceLoader._processedFileObjects.get(fId);
-			}
+			ResourceLoader._processedFileRequests.set(id, []);
 			
 			var parser = ResourceLoader.FileFormatParser[fileType];
-			var pfObj = new parser(data);
+			var pobj = new parser(data);
 			
-			ResourceLoader._processedFileObjects.set(fId, pfObj);
-			
-			return pfObj;
+			ResourceLoader._processedFileObjects.set(id, pobj);
+						
+			for(var i = 0; i < reqs.length; i++) {
+				reqs[i].success(pobj);
+			}
 			
 		});
+	
+	return task;
 	
 };
 
