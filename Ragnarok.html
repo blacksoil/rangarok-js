@@ -1,92 +1,99 @@
-<script src="Tables/VarEnum.js"></script>
+<!DOCTYPE html>
+<head>
 
-<!-- Commons -->
-		
-<script src="common.js"></script>
-<script src="prototype.js"></script>
-<script src="Deferred.js"></script>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	
+	<script src="settings.js"></script>
+	
+	<!-- File formats -->
+	<script src="js/fileformat/rsm.js"></script>
+	<script src="js/fileformat/gat.js"></script>
+	<script src="js/fileformat/gnd.js"></script>
+	<script src="js/fileformat/rsw.js"></script>
+	<script src="js/fileformat/SprParser.js"></script>
+	<script src="js/fileformat/ActParser.js"></script>
 
-<script src="settings.js"></script>
+	<!-- Commons -->
+	<script src="js/common/common.js"></script>
+	<script src="js/common/prototype.js"></script>
+	<script src="js/common/md5.js"></script>
+	<script src="js/common/Deferred.js"></script>
+	<script src="js/common/EventHandler.js"></script>
+	<script src="js/common/InputEventHandler.js"></script>
+	<script src="js/common/PathHelper.js"></script>
+	<script src="js/common/ResourceLoader.js"></script>
 
-<!-- Tables -->
+	<!-- Tables -->
+	<script src="js/table/VarEnum.js"></script>
+	<script src="js/table/mp3nametable.js"></script>
+	<script src="js/table/IndoorRswTable.js"></script>
+	<script src="js/table/fogparametertable.js"></script>
+	<script src="js/table/ClassResNameTable.js"></script>
+	<script src="js/table/pcjobtable.js"></script>
+	<script src="js/table/AccessoryIdTable.js"></script>
+	<script src="js/table/AccessoryNameTable.js"></script>
+	<script src="js/table/HeadIdTable.js"></script>
+	<script src="js/table/npcidentity.js"></script>
+	<script src="js/table/jobname.js"></script>
 
-<script src="Tables/VarEnum.js"></script>
-<script src="Tables/mp3nametable.js"></script>
-<script src="Tables/fogparametertable.js"></script>
-<script src="Tables/ClassResNameTable.js"></script>
-<script src="Tables/pcjobtable.js"></script>
-<script src="Tables/AccessoryIdTable.js"></script>
-<script src="Tables/AccessoryNameTable.js"></script>
-<script src="Tables/HeadIdTable.js"></script>
+	<!-- Interface -->
+	<script src="js/interface/component/InterfaceCommons.js"></script>
+	<script src="js/interface/component/InterfaceComponent.js"></script>
+	<script src="js/interface/component/BaseWindow.js"></script>
+	<script src="js/interface/component/SelectionList.js"></script>
+	<script src="js/interface/component/InputButton.js"></script>
+	<script src="js/interface/component/CanvasTextfield.js"></script>
+	<script src="js/interface/component/DOMTextInput.js"></script>
+	<script src="js/interface/component/CharacterComponent.js"></script>
+	<script src="js/interface/window/CharacterSelectWindow.js"></script>
+	<script src="js/interface/window/ChatWindow.js"></script>
+	<script src="js/interface/window/LoginWindow.js"></script>
+	<script src="js/interface/window/Minimap.js"></script>
+	<script src="js/interface/window/ScrollBar.js"></script>
+	<script src="js/interface/window/ServiceWindow.js"></script>
+	<script src="js/interface/InterfaceManager.js"></script>
 
-<!-- File formats -->
+	<!-- Sound -->
+	<script src="js/sound/SoundPlayer.js"></script>
 
-<script src="FileFormat/rsm.js"></script>
-<script src="FileFormat/gat.js"></script>
-<script src="FileFormat/gnd.js"></script>
-<script src="FileFormat/rsw.js"></script>
-<script src="FileFormat/SprParser.js"></script>
-<script src="FileFormat/ActParser.js"></script>
+	<!-- 3D -->
 
-<!-- Helpers -->
+	<script src="js/world/include/three.58.js"></script>
+	<script src="js/world/include/EffectComposer.js"></script>
+	<script src="js/world/include/CopyShader.js"></script>
+	<script src="js/world/include/ConvolutionShader.js"></script>
+	<script src="js/world/include/ShaderPass.js"></script>
+	<script src="js/world/include/MaskPass.js"></script>
+	<script src="js/world/include/RenderPass.js"></script>
+	<script src="js/world/include/BloomPass.js"></script>
 
-<script src="ResourceLoader.js"></script>
+	<script src="js/world/BoundingBox.js"></script>
+	<script src="js/world/RagnarokControls.js"></script>
+	<script src="js/world/MapLoader.js"></script>
+	<script src="js/world/SpriteActor.js"></script>
+	<script src="js/world/SceneManager.js"></script>
 
-<!-- Input -->
+	<!-- Network -->
 
-<script src="InputEventHandler.js"></script>
+	<script src="js/network/Socket.js"></script>
+	<script src="js/network/Session.js"></script>
+	<script src="js/network/SessionActor.js"></script>
+	<script src="js/network/NetworkManager.js"></script>
+	<script src="js/network/PacketEventHandlers.js"></script>
+	<script src="js/network/packet/PacketDefaultIdTable.js"></script>
+	<script src="js/network/packet/PacketDb.js"></script>
+	<script src="js/network/packet/PacketVersion.js"></script>
+	<script src="js/network/packet/PacketStructLengthTable.js"></script>
+	<script src="js/network/packet/PacketStructureDefinition.js"></script>
+	<script src="js/network/packet/PacketStructureIndexedFields.js"></script>
 
-<!-- Interface -->
-
-<script src="Interface/InterfaceCommons.js"></script>
-
-<script src="Interface/InterfaceComponent.js"></script>
-<script src="Interface/BaseWindow.js"></script>
-
-<script src="Interface/SelectionList.js"></script>
-<script src="Interface/InputButton.js"></script>
-
-<script src="Interface/CanvasTextfield.js"></script>
-<script src="Interface/DOMTextInput.js"></script>
-
-<script src="WindowObjects.js"></script>
-
-<script src="InterfaceManager.js"></script>
-
-
-<!-- Sound -->
-
-<script src="SoundPlayer.js"></script>
-
-<!-- 3D -->
-
-<script src="graphics/include/BoundingBox.js"></script>
-<script src="include/three.58.js"></script>
-<script src="RagnarokControls.js"></script>
-
-<script src="MapLoader.js"></script>
-
-<script src="SpriteActor.js"></script>
-
-<!-- Network -->
-
-<script src="PacketLengthTable.js"></script>
-<script src="PacketParser.js"></script>
-<script src="PacketBuilder.js"></script>
-
-<script src="PacketEventHandlers.js"></script>
-
-<script src="NetworkSession.js"></script>
-<script src="NetworkManager.js"></script>
-
-<script src="FileManager.js"></script>
-
-<script src="SceneManager.js"></script>
-
-<script src="GameManager.js"></script>
+	<script src="js/Ragnarok.js"></script>
 
 
-<link rel="stylesheet" type="text/css" href="Ragnarok.css" />
+	<link rel="stylesheet" type="text/css" href="Ragnarok.css" />
+
+</head>
+
 
 <script>
 
@@ -95,16 +102,22 @@
 window.onload = (function() {
 	
 	return function() {
+	
+		if(ArrayBuffer === undefined)
+			throw "ArrayBuffer is undefined ???";
 		
 		ro_text_container = document.createElement('div');
 		ro_text_container.id = 'ro-text-container';
 		
 		document.body.appendChild( ro_text_container );
 		
-		(new Ragnarok( document )).init();
+		var game = new Ragnarok( document );
 		
-		//document.body.appendChild( ragnarok.scene.domElement );
-		document.body.appendChild(Ragnarok.Instance.gui.domElement );
+		game.init();
+		
+		// TODO: Wrap everything in game.domElement
+		
+		document.body.appendChild( game.graphics.gui.domElement );
 		
 		
 	};

@@ -32,6 +32,6 @@ var Settings = {
 	// Override remote host address for all server connections:
 	// (Use in case of conflict between tunnel host and client address)
 	
-	webSocketRemoteHost: "129.241.127.157",
+	webSocketRemoteHost: "192.168.1.1",
 
 };

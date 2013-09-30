@@ -1,7 +1,7 @@
 {
   
   "name": "ragnarok",
-  "main": "MapLoader.html",
+  "main": "Ragnarok.html",
   
   "window": {
 	
@@ -18,8 +18,8 @@
 	
 	"fullscreen": false,
 	"frame": true,
-	"icon": "icon.png",
-	"toolbar": false
+	"icon": "assets/icon.png",
+	"toolbar": true
 	
   }
   

@@ -35,6 +35,7 @@
 		
 		<!-- Helpers -->
 		
+		<script src="PathHelper.js"></script>
 		<script src="ResourceLoader.js"></script>
 		
 		<!-- Input -->
@@ -72,6 +73,14 @@
 		<script src="MapLoader.js"></script>
 		
 		<script src="SpriteActor.js"></script>
+		
+		<script src="include/EffectComposer.js"></script>
+		<script src="include/CopyShader.js"></script>
+		<script src="include/ConvolutionShader.js"></script>
+		<script src="include/ShaderPass.js"></script>
+		<script src="include/MaskPass.js"></script>
+		<script src="include/RenderPass.js"></script>
+		<script src="include/BloomPass.js"></script>
 		
 	</head>
 	
@@ -358,6 +367,22 @@ var start = function() {
 	//gui.add(chatWindow, InterfaceAlignment.Left, InterfaceAlignment.Bottom);
 	//return;
 
+	//var charSelectWindow = gui.create( Interface.CharSelect );
+		
+	//charSelectWindow.addCharacter( {
+	//	head: 0,
+	//	Sex: 1,
+	//	job: 0,
+	//	CharNum: 0
+	//} );
+	
+	//gui.add(
+	//	charSelectWindow,
+	//	InterfaceAlignment.Center, 
+	//	InterfaceAlignment.Center
+	//);
+
+	//return;
 	
 	// Setup map loader
 	
@@ -375,7 +400,7 @@ var start = function() {
 	var mapName = location.href.match(/map=([\w\d_]+.rsw)/i);
 	
 	mapLoader
-		.loadMap((mapName !== null && mapName[1]) || "c_tower1.rsw")
+		.loadMap((mapName !== null && mapName[1]) || "c_tower2.rsw")
 		.then(function(d) {
 			
 			console.log("Info: Loading finished in " + (Date.now() - start) + "ms");
