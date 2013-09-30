@@ -49,8 +49,10 @@ var SpriteActor = function(mapInstance, name) {
 	this._nameLabelGenerated = false;
 	
 	this.fadeAlpha = 1.0;
+	this.fadeSourceAlpha = 0.0;
 	this.fadeTargetAlpha = 1.0;
 	this.fadeTargetEndTime = 0;
+	this.fadeTargetStartTime = 0;
 	
 	this._active = true;
 	
@@ -58,9 +60,11 @@ var SpriteActor = function(mapInstance, name) {
 
 SpriteActor.prototype = Object.create(EventHandler.prototype);
 
-SpriteActor.prototype.fadeTarget = function(alpha, endTime) {
+SpriteActor.prototype.fadeTarget = function(targetAlpha, endTime) {
 	
-	this.fadeTargetAlpha = alpha;
+	this.fadeSourceAlpha = this.fadeTargetAlpha;
+	this.fadeTargetAlpha = targetAlpha;
+	this.fadeTargetStartTime = Date.now();
 	this.fadeTargetEndTime = endTime;
 	
 };
@@ -132,6 +136,8 @@ SpriteActor.AttachmentPriority = {
 
 SpriteActor.prototype.Die = function() {
 
+	this.AbruptStop();
+	
 	this.Action = this.ActionSet.DIE;
 
 };
@@ -142,6 +148,10 @@ SpriteActor.prototype.__defineGetter__('ActionSet', function() {
 		return SpriteActor.PlayerActionIndices;
 	
 	return SpriteActor.BaseActionIndices;
+});
+
+SpriteActor.prototype.__defineGetter__('AnimationRepeat', function() {
+	return this.Action != this.ActionSet.DIE;
 });
 
 SpriteActor.prototype.__defineGetter__('Action', function() {
@@ -210,6 +220,13 @@ SpriteActor.prototype.SetGatPosition = function(x, y) {
 	
 	this.gatPosition = new THREE.Vector2(x, y);
 };
+
+SpriteActor.prototype.AbruptStop = function() {
+
+	this.CancelMove();
+	this.isMoving = false;
+
+}
 
 SpriteActor.prototype.CancelMove = function() {
 	if(this.isMoving) {
@@ -862,7 +879,21 @@ SpriteActor.prototype.UpdateAttachment = function(deltaTime, attachmentType, mot
 	
 	if(attachment.timeElapsed >= delay) {
 		
-		attachment.frameId = (attachment.frameId + 1) % actFileObject.actions[motion].length;
+		var nextFrameId = attachment.frameId + 1;
+		var numFrames = actFileObject.actions[motion].length;
+		
+		if(nextFrameId >= numFrames) {
+			
+			if(this.AnimationRepeat) {
+				attachment.frameId = nextFrameId % numFrames;
+			}
+			
+		} else {
+		
+			attachment.frameId = nextFrameId;
+		
+		}
+		
 		attachment.timeElapsed = attachment.timeElapsed % delay;
 		
 	}
@@ -893,7 +924,10 @@ SpriteActor.prototype.Update = function(camera) {
 	
 	if( this.fadeTargetEndTime - Date.now() > 0 ) {
 		
-		this.fadeAlpha += (this.fadeTargetAlpha - this.fadeAlpha) * 0.05;
+		var d = this.fadeTargetEndTime - this.fadeTargetStartTime;
+		var t = ( this.fadeTargetEndTime - Date.now() ) / d;
+		
+		this.fadeAlpha = this.fadeTargetAlpha * (1 - t) + this.fadeSourceAlpha * t;
 		
 		
 	} else {

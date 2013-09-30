@@ -4,7 +4,7 @@ function SceneManager() {
 	
 };
 
-SceneManager.FadeOutTime = 3000;
+SceneManager.FadeTransitionTime = 1000;
 
 SceneManager.prototype = Object.create(EventHandler.prototype);
 
@@ -55,7 +55,9 @@ SceneManager.prototype.Update = function() {
 	
 		if(entity.userData.markedForDeletion !== undefined) {
 			
-			if(Date.now() - entity.userData.markedForDeletion >= SceneManager.FadeOutTime) {
+			var duration = Date.now() - entity.userData.markedForDeletion;
+			
+			if(duration >= entity.userData.deletionDelay) {
 				this.removeEntity(GID);
 				continue;
 			}
@@ -143,8 +145,9 @@ SceneManager.prototype.KillEntity = function(GID) {
 		if(entity.type != SpriteActor.Types.PLAYER) {
 			
 			// Players shouldn't be removed when they die
-			this.RemoveEntity(GID);
-		
+			
+			this.removeEntityOnTimer(GID, 5000.0);
+			
 		}
 		
 		
@@ -183,8 +186,8 @@ SceneManager.prototype.AddEntity = function(GID, charInfo) {
 		
 	}
 	
-	entity.fadeAlpha = 0.0;	
-	entity.fadeTarget(1.0, Date.now() + SceneManager.FadeOutTime);
+	entity.fadeTargetAlpha = 0;
+	entity.fadeTarget(1.0, Date.now() + SceneManager.FadeTransitionTime);
 	
 	
 };
@@ -399,18 +402,25 @@ SceneManager.prototype.createActorAttachment = function(actor, resName, attachme
 	
 };
 
-SceneManager.prototype.RemoveEntity = function(id) {
+SceneManager.prototype.removeEntityOnTimer = function(GID, duration) {
+
+	var entity = this.entityMap.get(GID);
 	
-	if(!this.entityMap.has(id)) {
+	entity.userData.markedForDeletion = Date.now();
+	entity.userData.deletionDelay = duration;
+	
+	entity.fadeTarget(0.0, Date.now() + duration);
+
+};
+
+SceneManager.prototype.RemoveEntity = function(GID) {
+	
+	if(!this.entityMap.has(GID)) {
 		console.warn("SceneManager: Unable to remove non-existant entity");
 		return;
 	}
 	
-	var entity = this.entityMap.get(id);
-	
-	entity.userData.markedForDeletion = Date.now();
-	
-	entity.fadeTarget(0.0, Date.now() + SceneManager.FadeOutTime);
+	this.removeEntityOnTimer(GID, SceneManager.FadeTransitionTime);
 	
 };
 
