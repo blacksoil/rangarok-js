@@ -48,8 +48,12 @@ ROSession.prototype.SetMap = function(mapName) {
 	if(typeof mapName != "string")
 		throw "ROSession: Invalid map name";
 	
+	//if(this.mapName == mapName) {
+	//	console.log("Map is the same");
+	//}
+	
 	this.mapName = mapName;
-	this._fireEvent("OnMapNameChange", mapName);
+	this._fireEvent("OnMapChange", mapName);
 };
 
 ROSession.prototype.GetMapName = function() {
@@ -200,7 +204,6 @@ ROSession.prototype.CreatePcActor = function() {
 	this.pc.actor = this.GetActor(this.pc.GID);
 		
 };
-
 
 ROSession.prototype.SetGlobalFont = function(font) { 
 	this.font = font; 

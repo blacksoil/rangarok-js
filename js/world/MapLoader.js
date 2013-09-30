@@ -1,6 +1,7 @@
 var MapLoader = function() {
 	EventHandler.call(this);
 	this.reset();
+	this.setup();
 };
 
 MapLoader.prototype = Object.create(EventHandler.prototype);
@@ -40,6 +41,8 @@ MapLoader.prototype.reset = function() {
 	
 	this.colorPickingInterval = 1000 / 5;
 	this.colorPickingFocusObjectId = 0;
+	
+	this.animationKey = null;
 	
 	this.focusActiveActor = null;
 	
@@ -1617,6 +1620,8 @@ MapLoader.prototype.setup = function() {
 	this.mouseMoveEvent = this.OnMouseMove.bind( this );
 	this.mouseUpEvent = this.OnMouseUp.bind( this );
 	this.mouseDownEvent = this.OnMouseDown.bind( this );
+	
+	this.setupScene();
 
 };
 
@@ -1939,6 +1944,11 @@ MapLoader.prototype.OnMouseDown = function( e ) {
 		
 };
 
+MapLoader.prototype.OnMouseWheelDown = function(e) {
+	
+	this.controls.Zoom( e.wheelDeltaY );
+	
+};
 
 MapLoader.prototype.start = function() {
 	
@@ -1957,11 +1967,9 @@ MapLoader.prototype.start = function() {
 		return false;
 	}
 	
-	window.addEventListener('mousewheel', (function(e) {
-		
-		this.controls.Zoom( e.wheelDeltaY );
-		
-	}).bind(this))
+	this.onmousewheel = (this.OnMouseWheelDown).bind(this);
+			
+	window.addEventListener('mousewheel', this.onmousewheel);
 	
 	// Append to DOM
 	
@@ -2089,14 +2097,6 @@ MapLoader.prototype.start = function() {
 			
 			this.coordinatePointer.setElevation( this.gatFileObject.getBlock(x, z) );
 			
-			// Adjust so it's a little above ground :)
-			//this.coordinatePointer.mesh.position.y -= this.gatFileObject.getBlockAvgDepth(this.mouseGatPosition.x, this.mouseGatPosition.y) - 0.5;
-			
-			//coordPointer.geometry.vertices[0].y = -tile.lowerLeftHeight; // top left
-			//coordPointer.geometry.vertices[1].y = -tile.lowerRightHeight; // top right
-			//coordPointer.geometry.vertices[2].y = -tile.upperRightHeight; // bottom left
-			//coordPointer.geometry.vertices[3].y = -tile.upperLeftHeight; // bottom right
-			//coordPointer.geometry.verticesNeedUpdate = true;
 		 }
 		
 	}).bind(this), this.mousePickingInterval);
@@ -2110,23 +2110,16 @@ MapLoader.prototype.start = function() {
 	
 	var animate;
 	
-	var composer = new THREE.EffectComposer( this.renderer );
-	
-	composer.addPass( new THREE.RenderPass( this.scene, this.camera ) );
-	
+	//var composer = new THREE.EffectComposer( this.renderer );
+	//composer.addPass( new THREE.RenderPass( this.scene, this.camera ) );
 	// strength, kernelSize, sigma, resolution
-	var effect = new THREE.BloomPass(1.15, 5, 0.2, 1024);
-	
-	effect.enabled = false;
-	composer.addPass( effect );
-	
-	var copyPass = new THREE.ShaderPass( THREE.CopyShader );
-	
-	copyPass.renderToScreen = true;
-	
-	composer.addPass( copyPass );
-	
-	this.composer = composer;
+	//var effect = new THREE.BloomPass(1.15, 5, 0.2, 1024);
+	//effect.enabled = false;
+	//composer.addPass( effect );
+	//var copyPass = new THREE.ShaderPass( THREE.CopyShader );
+	//copyPass.renderToScreen = true;
+	//composer.addPass( copyPass );
+	//this.composer = composer;
 	
 	animate = (function() {
 		
@@ -2139,8 +2132,8 @@ MapLoader.prototype.start = function() {
 			
 			this.controls.Update( dt );
 			
-			//this.renderer.render(this.scene, this.camera);
-			this.composer.render( dt );
+			this.renderer.render(this.scene, this.camera);
+			//this.composer.render( dt );
 			
 			if(colorPick && now - lastColorPick >= this.colorPickingInterval) {
 			
@@ -2204,7 +2197,7 @@ MapLoader.prototype.start = function() {
 				
 			}
 			
-			requestAnimationFrame(animate);
+			this.animationKey = requestAnimationFrame(animate);
 		}
 		
 	}).bind(this);
@@ -2218,10 +2211,19 @@ MapLoader.prototype.stop = function() {
 	// Stop running the animation loop
 	this.running = false;
 	
+	cancelAnimationFrame(this.animationKey);
+	
 	if(this.mousePickingIntervalKey)
 		clearInterval(this.mousePickingIntervalKey);
 	
+	// Remove mouse wheel event
+	// TODO: move this elsewhere
+	window.removeEventListener(this.onmousewheel);
+	
 	document.body.removeChild(this.renderer.domElement);
+	
+	// Maybe unload?
+	//ragnarok.graphics.scene.loader.scene.__objects
 	
 };
 
@@ -2272,11 +2274,7 @@ MapLoader.prototype.__defineGetter__("screen", function() {
 });
 
 MapLoader.prototype.loadMap = function(worldResourceName) {
-	
-	this.setup();
-	
-	this.setupScene();
-	
+			
 	this.worldResourceName = worldResourceName;
 	
 	Tick();

@@ -13,6 +13,10 @@ var SoundPlayer = {
 		
 	},
 	
+	stopBgm: function() {
+		SoundPlayer.pauseBgm();
+	},
+	
 	unpauseBgm: function() {
 		SoundPlayer.bgm.play();
 	},

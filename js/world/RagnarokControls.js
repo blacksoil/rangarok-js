@@ -155,9 +155,14 @@ RagnarokControls.prototype.Update = function( dt ) {
 		var dy1 = dy0 * RagnarokControls.LerpRatio;
 		var dz1 = dz0 * RagnarokControls.LerpRatio;
 		
-		this.position.x += Math.abs( dx1 ) < RagnarokControls.CameraMovementCutoff ? dx0 : dx1;
-		this.position.y += Math.abs( dy1 ) < RagnarokControls.CameraMovementCutoff ? dy0 : dy1;
-		this.position.z += Math.abs( dz1 ) < RagnarokControls.CameraMovementCutoff ? dz0 : dz1;
+		if(dx0 > 100 || dy0 > 100 || dz0 > 100) {
+			this.position.copy(this.target.position);
+		} else {
+			this.position.x += Math.abs( dx1 ) < RagnarokControls.CameraMovementCutoff ? dx0 : dx1;
+			this.position.y += Math.abs( dy1 ) < RagnarokControls.CameraMovementCutoff ? dy0 : dy1;
+			this.position.z += Math.abs( dz1 ) < RagnarokControls.CameraMovementCutoff ? dz0 : dz1;		
+		}
+		
 		
 		// Clamp target zoom
 		

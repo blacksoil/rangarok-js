@@ -141,6 +141,19 @@ var PacketEventHandlers = [
 
 	}],
 	
+	// Map move
+	
+	[["PACKET_ZC_NPCACK_MAPMOVE"], 
+	
+	function( struct ) {
+	
+		this.SetMap(charCodeArrayToString(struct.mapName));
+		
+		this.SetPCStatus(GameVar.CURXPOS, struct.xPos);
+		this.SetPCStatus(GameVar.CURYPOS, struct.yPos);
+		
+	}],
+	
 	// Chat
 	
 	[["PACKET_ZC_NOTIFY_CHAT", "PACKET_ZC_NOTIFY_PLAYERCHAT"],

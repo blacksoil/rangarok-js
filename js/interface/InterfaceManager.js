@@ -12,19 +12,7 @@ function InterfaceManager( document ) {
 	
 	this.domElement.style.zIndex = 10;
 	
-	this.context = this.domElement.getContext('2d');
-	
-	//window.onresize = (function() {
-		
-	//	console.log('Info: Interface refreshing from resize');
-		
-	//	setTimeout((function() {
-			
-	//		this.refresh( true );
-			
-	//	}).bind( this ), 100 );
-	
-	//}).bind( this );
+	this.ctx = this.domElement.getContext('2d');
 	
 	this.mouseDownEvent = this.OnMouseDown.bind( this );
 	this.mouseUpEvent = this.OnMouseUp.bind( this );
@@ -110,7 +98,7 @@ InterfaceManager.prototype.refresh = function( clear ) {
 		
 		if( this.__backgroundReady && this.__background !== null ) {
 			
-			this.context.drawImage(
+			this.ctx.drawImage(
 				this.__background,
 				0, 0,
 				this.domElement.width, this.domElement.height
@@ -118,7 +106,7 @@ InterfaceManager.prototype.refresh = function( clear ) {
 			
 		} else {
 				
-			this.context.clearRect(
+			this.ctx.clearRect(
 				0, 0, 
 				this.domElement.width, this.domElement.height
 			);
@@ -168,17 +156,17 @@ InterfaceManager.prototype.draw = function() {
 			&& this.__dragObject.window == this.__objects[i];
 		
 		if( isDragged ) {
-			this.context.globalAlpha = 0.5;
+			this.ctx.globalAlpha = 0.5;
 		}
 		
 		(this.__objects[i]).object.draw(
-			this.context, 
+			this.ctx, 
 			this.__objects[i].x, 
 			this.__objects[i].y
 		);
 		
 		if( isDragged ) {
-			this.context.globalAlpha = 1.0;
+			this.ctx.globalAlpha = 1.0;
 		}
 	
 	};
@@ -207,22 +195,27 @@ InterfaceManager.prototype.add = function( window, sx, sy, adjustX, adjustY ) {
 
 InterfaceManager.prototype.removeAll = function() {
 
-	for(var i = 0; i < this.__objects.length; i++) {
-		this.remove(this.__objects[i]);
+	var n = this.__objects.length;
+
+	for(var i = 0; i < n; i++) {
+		this.remove((this.__objects[0]).object);
 	}
+	
+	console.log("Info: Removed " + n + " windows");
+	
 };
 
 InterfaceManager.prototype.remove = function( windowObject ) {
 	
 	var idx = -1;
 	
-	
 	for( var i = 0; i < this.__objects.length; i++ )
 		if( this.__objects[i].object === windowObject )
 			idx = i;
 	
-	
 	if( idx >= 0 ) {
+		
+		console.log("Removed window");
 		
 		windowObject.__destroy();
 		this.__objects.splice( idx, 1 );

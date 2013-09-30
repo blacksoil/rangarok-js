@@ -52,6 +52,7 @@ var SpriteActor = function(mapInstance, name) {
 	this.fadeTargetAlpha = 1.0;
 	this.fadeTargetEndTime = 0;
 	
+	this._active = true;
 	
 };
 
@@ -647,6 +648,9 @@ var SpriteActorAttachment = function(groupId, sprFileObject, actFileObject) {
 
 SpriteActor.prototype.UnloadFromScene = function() {
 
+	this.removeNameLabel();
+	this.removeDisplayMessageLabel();
+
 	for(var i in this.attachments) {
 		this.RemoveAttachment(i);
 	}
@@ -678,6 +682,9 @@ SpriteActor.prototype.RemoveAttachment = function(attachmentType) {
 
 SpriteActor.prototype.addAttachmentToScene = function(scene, attachmentType) {
 	
+	if(!this._active)
+		return false;
+	
 	var attachment = this.getAttachment(attachmentType);
 	
 	if(!attachment.inScene) {
@@ -692,6 +699,8 @@ SpriteActor.prototype.addAttachmentToScene = function(scene, attachmentType) {
 		
 		attachment.inScene = true;
 	}
+	
+	return true;
 	
 };
 
@@ -1149,6 +1158,18 @@ SpriteActor.prototype.hideNameLabel = function() {
 
 	this.nameLabelSprite.visible = false;
 };
+
+SpriteActor.prototype.removeNameLabel = function() {
+
+	if(this.nameLabelSprite instanceof THREE.Sprite) {
+		this.mapInstance.scene.remove(this.nameLabelSprite);
+	}
+	
+	this.displayMessageSprite = null;
+	this.displayMessageCreationTime = -1;
+
+};
+
 
 SpriteActor.prototype.removeDisplayMessageLabel = function() {
 

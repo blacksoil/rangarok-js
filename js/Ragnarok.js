@@ -163,51 +163,11 @@ Ragnarok.prototype.displayServiceSelect = function() {
 
 };
 
-
-Ragnarok.prototype.onPlayerMove = function(moveData) {
-	
-	if(this.PCActor.gatPosition.x != moveData[0] 
-		&& this.PCActor.gatPosition.y != moveData[1]) {
-		console.warn("Player had incorrect position");
-	}
-	
-	this.PCActor.MoveToGatPosition(moveData[2], moveData[3]);
-	
-};
-
 Ragnarok.prototype.playerRequestMove = function(gatPosition) {
 	
 	this.session.MovePlayer(gatPosition.x, gatPosition.y);
 	
 };
-
-Ragnarok.prototype.CreateAttachment = function(obj, n, ttype) {
-	// REMOVe THIS SHIT CODE!
-	var q = Deferred();
-	var sprFileObject = null;
-	var actFileObject = null;
-	
-	var scene = this.graphics.scene.scene;
-	
-	q	.then(ResourceLoader.getSpr.bind(this, n + ".spr"))
-		.then(function(data) {
-			sprFileObject = new SprParser(data);
-		});
-		
-	q	.then(ResourceLoader.getAct.bind(this, n + ".act"))
-		.then(function(data) {
-			actFileObject = new ActParser(data);
-		});
-		
-	q	.finally(function() {
-			
-		obj.SetAttachment(ttype, sprFileObject, actFileObject);
-		
-		obj.addAttachmentToScene(scene, ttype);
-		
-	});
-
-}
 
 Ragnarok.prototype.createMainInterface = function() {
 
@@ -230,6 +190,12 @@ Ragnarok.prototype.createMainInterface = function() {
 	
 };
 
+Ragnarok.prototype.hideMainInterface = function() {
+
+	// TODO
+
+};
+
 Ragnarok.prototype.displayMainInterface = function() {
 	
 	// Add chat window
@@ -247,42 +213,27 @@ Ragnarok.prototype.displayMainInterface = function() {
 	
 	this.graphics.gui.add(this.minimap, InterfaceAlignment.Right, InterfaceAlignment.Top, -10, 10);
 	
-	var actor = this.graphics.scene.entityMap.get(this.session.pc.GID);
 	
-	actor.attachEventListener("OnGatPositionChange", (function( position ) {
+	// TODO (can't keep reference to actor entity)
+	
+	//var actor = this.graphics.scene.entityMap.get(this.session.pc.GID);
+	
+	//actor.attachEventListener("OnGatPositionChange", (function( position ) {
 		
-		this.minimap.setPosition(
-			position.x, 
-			position.y, 
+	//	this.minimap.setPosition(
+	//		position.x, 
+	//		position.y, 
 			// move these to constructor...
-			this.graphics.scene.loader.gatFileObject.width, 
-			this.graphics.scene.loader.gatFileObject.height, 
-			actor.standingDirection
-		);
+	//		this.graphics.scene.loader.gatFileObject.width, 
+	//		this.graphics.scene.loader.gatFileObject.height, 
+	//		actor.standingDirection
+	//	);
 	
-	}).bind(this));
+	//}).bind(this));
 
 };
 
-Ragnarok.prototype.onGameEnter = function() {
-
-	// Display interface
-
-	this.graphics.gui.clearBackground();
-	
-	this.displayMainInterface();
-
-	// Music
-	
-	var rswName = this.graphics.scene.getCurrentMapName();
-	
-	if(Settings.music && rswName in mp3NameTable) {
-		SoundPlayer.playBgm(mp3NameTable[rswName]);
-	}
-	
-};
-
-Ragnarok.prototype.setupSceneHandlers = function() {
+Ragnarok.prototype.setupSessionHandlers = function() {
 
 	this.session.attachEventListener("OnActorAppear", (function(session_actor) {
 		
@@ -332,110 +283,142 @@ Ragnarok.prototype.setupSceneHandlers = function() {
 		
 	}).bind(this));
 
+	this.session.attachEventListener("OnMapChange", (function(mapName) {
+	
+		this.onStateChangeMap();
+	
+	}).bind(this));
+
 };
 
-// Called when map name is received from zone server
+Ragnarok.prototype.setupSceneHandlers = function() {
+
+	this.graphics.scene.attachEventListener("OnMoveRequest", 
+		this.playerRequestMove.bind(this));
+
+	this.graphics.scene.attachEventListener("OnSceneLoadDone", 
+		this.loadSceneAfter.bind(this));
+	
+};
+
+Ragnarok.prototype.removeSceneHandlers = function() {
+
+	this.graphics.scene.detachAllEventListeners();
+
+};
+
+Ragnarok.prototype.removeSessionHandlers = function() {
+
+	this.session.detachAllEventListeners();
+
+};
+
+Ragnarok.prototype.addPlayerCharacterToScene = function() {
+	
+	this.graphics.scene.AddEntity(
+		this.session.pc.GID,
+		this.session.pc.actor
+	);
+	
+};
+
+Ragnarok.prototype.loadSceneAfter = function() {
+	
+	this.graphics.scene.bindActorToCamera(this.session.pc.GID);
+	
+	// Update player position
+	
+	this.graphics.scene.SetEntityPosition(
+		this.session.pc.GID,
+		this.session.pc.actor.x,
+		this.session.pc.actor.y
+	);
+	
+	// Display interface
+
+	this.graphics.gui.clearBackground();
+	
+	this.displayMainInterface();
+
+	// Music
+	
+	var rswName = this.graphics.scene.getCurrentMapName();
+	
+	if(Settings.music && rswName in mp3NameTable) {
+		SoundPlayer.playBgm(mp3NameTable[rswName]);
+	}
+			
+	// Start rendering
+	this.graphics.scene.Start();
+	
+	this.attachSceneInput();
+	
+	// Report to session that we're ready to continue
+	this.session.ReportSceneReady();
+
+};
+
+Ragnarok.prototype.onLeaveMap = function() {
+
+	console.log("Info: Leaving map");
+	
+	SoundPlayer.stopBgm();
+	
+	this.graphics.gui.removeAll();
+	
+	this.detachSceneInput();
+	
+	this.removeSceneHandlers();
+	this.removeSessionHandlers();
+	
+	this.graphics.scene.Stop();
+	this.graphics.scene.Unload();
+
+};
+
+Ragnarok.prototype.onStateChangeMap = function() {
+	
+	this.session.ReportSceneReady(); 
+	
+	var sceneMap = this.graphics.scene.getCurrentMapName().split(".")[0];
+	var sessionMap = this.session.GetMapName().split(".")[0];
+	
+	if(sceneMap == sessionMap) {
+		
+		// Map is the same, just remove current entities and continue
+		
+		this.graphics.scene.UnloadAllEntities();
+		this.addPlayerCharacterToScene();
+		this.graphics.scene.bindActorToCamera(this.session.pc.GID);
+		this.session.ReportSceneReady();
+		
+	} else {
+		
+		this.onLeaveMap();
+		this.onStateLoadMap();
+		
+	}
+}
+
+// Called when entering map on the zone server for the first time
 Ragnarok.prototype.onStateLoadMap = function() {
 	
-	console.log('Info: Zone server accepted us, starting to load map');
-	console.log('Info: Map is ' + this.session.GetMapName());
+	console.log('Info: Map is now ' + this.session.GetMapName());
 	
 	this.createMainInterface();
 	
+	this.setupSessionHandlers();
+	this.setupSceneHandlers();
+	
+	// Add player as first entity
+	
+	this.addPlayerCharacterToScene();
+	
 	// Load scene
 	
-	this.graphics.scene.Load(this.session.GetMapName().replace(/gat$/, "rsw"));
+	var rswName = this.session.GetMapName().replace(/gat$/, "rsw");
 	
-	this.graphics.scene.attachEventListener("OnSceneLoadDone", (function() {
-		
-		// Add player to scene
-		this.graphics.scene.AddEntity(
-			this.session.pc.GID,
-			this.session.pc.actor
-		);
-		
-		// Update position
-		this.graphics.scene.SetEntityPosition(
-			this.session.pc.GID,
-			this.session.pc.actor.x,
-			this.session.pc.actor.y
-		);
-		
-		this.setupSceneHandlers();
-		
-		// Bind camera to player character
-		this.graphics.scene.bindActorToCamera(this.session.pc.GID);
-		
-		// Enable input to scene
-		
-		// Misc
-		this.onGameEnter();
-				
-		//this.graphics.scene.attachEventListener("OnPCRequestMove", this.playerRequestMove.bind(this));
-		this.graphics.scene.attachEventListener("OnMoveRequest", this.playerRequestMove.bind(this));
-		
-		// Start rendering
-		this.graphics.scene.Start();
-		
-		// Must be done after starting
-		this.attachSceneInput();
-		
-		// Report to session that we're ready to continue
-		this.session.ReportSceneReady(); 
-		
-	}).bind(this));
-	
-	//this.PCActor = new SpriteActor(this.graphics.scene);
-	//this.PCActor.MovementSpeed = this.session.pc.actor.speed;
-	
-	
-	/*
-	
-	this.graphics.scene.loadMap(this.session.GetMapName().replace(/gat$/, "rsw"))
-		.then((function() {
-			
-			// Load actor
-			
-			var bodyRes = PathHelper.getClassBodyResPath(this.session.pc.actor.job, this.session.pc.actor.Sex);
-			var headRes = PathHelper.getHeadResPath(this.session.pc.actor.head, this.session.pc.actor.Sex);
-			
-			Deferred()
-				.then(this.CreateAttachment.bind(this, this.PCActor, bodyRes, SpriteActor.Attachment.BODY))
-				.then(this.CreateAttachment.bind(this, this.PCActor, headRes, SpriteActor.Attachment.HEAD))
-				.then((function() {
-					
-					this.graphics.scene.start(); 
-					
-					this.PCActor.SetGatPosition(
-						this.session.GetPCStatus(GameVar.CURXPOS),
-						this.session.GetPCStatus(GameVar.CURYPOS)
-					);
-					
-					this.attachSceneInput();
-					
-					this.PCActor.Direction = this.session.GetPCStatus(GameVar.CURDIR);
-					
-					setInterval((function() {
-						this.PCActor.Update(this.graphics.scene.camera);
-					}).bind(this), 10);
-					
-					this.graphics.scene.bindCamera(this.PCActor);
-					
-					this.graphics.scene.attachEventListener("OnPCRequestMove", this.playerRequestMove.bind(this));
-					
-					this.session.attachEventListener("OnPCMove", this.onPlayerMove.bind(this));
-					
-					console.log("Starting scene");
-					
-				}).bind(this));
-			
-		}).bind(this))
-		.then((function() { 
-			
-			this.session.ReportSceneReady(); 
-		}).bind(this));
-	
-	*/
+	this.graphics.scene.Load(rswName);
 	
 };
 

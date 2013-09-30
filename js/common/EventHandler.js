@@ -34,13 +34,15 @@ EventHandler.prototype.detachEventListener = function(event, fn) {
 	if(this._eventListeners.has(event)) {
 		listeners = this._eventListeners.get(event);
 	} else {
+		console.warn("EventHandler: Can't remove listener " + fn);
 		return;
 	}
 	
 	var idx = listeners.indexOf(fn);
 	
 	if(idx > -1) {
-		listeners.slice(idx, 1);
+		listeners.splice(idx, 1);
+		console.log("EventHandler: Removed " + fn);
 	}
 	
 	this._eventListeners.set(event, listeners);

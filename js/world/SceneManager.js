@@ -2,8 +2,6 @@ function SceneManager() {
 
 	EventHandler.call(this);
 	
-	this.pcEntityId = -1;
-	
 };
 
 SceneManager.FadeOutTime = 3000;
@@ -11,6 +9,9 @@ SceneManager.FadeOutTime = 3000;
 SceneManager.prototype = Object.create(EventHandler.prototype);
 
 SceneManager.prototype.Init = function() {
+	
+	this.entityMap = new Map();
+	this.entityList = [];
 	
 	this.reset();
 	
@@ -21,14 +22,22 @@ SceneManager.prototype.reset = function() {
 	this._sceneActive = false;
 	this._sceneReady = false;
 	
-	this.controls = null;
 	this.loader = null;
+	
+	if(this.entityList instanceof Array && this.entityList.length > 0) {
+		this.UnloadAllEntities();
+	}
 	
 	this.entityMap = new Map();
 	this.entityList = [];
 	
+	if(this.updateInterval)
+		clearInterval(this.updateInterval);
+	
 	this.updateInterval = setInterval(this.Update.bind(this), 10);
 	this.lastUpdate = Date.now();
+	
+	this.loader = new MapLoader();
 	
 };
 
@@ -63,6 +72,9 @@ SceneManager.prototype.Update = function() {
 
 SceneManager.prototype.SetEntityPosition = function(GID, x, y) {
 
+	if(!this._sceneReady)
+		return;
+
 	if(!this.entityMap.has(GID)) {
 		console.warn("SceneManager: Can't set unknown entity position");
 		return;
@@ -75,6 +87,9 @@ SceneManager.prototype.SetEntityPosition = function(GID, x, y) {
 };
 
 SceneManager.prototype.MoveEntityPosition = function(GID, x, y, x1, y1, moveStartTime) {
+
+	if(!this._sceneReady)
+		return;
 
 	if(!this.entityMap.has(GID)) {
 		console.warn("SceneManager: Can't set unknown entity position");
@@ -118,7 +133,7 @@ SceneManager.prototype.SetActorMovementSpeed = function(actor, value) {
 // Add a new actor entity to the scene
 SceneManager.prototype.AddEntity = function(GID, charInfo) {
 	
-	if(!this._sceneActive)
+	if(this.loader === null || this.loader === undefined)
 		throw "SceneManager: Attempted to add entity while no scene is active";
 	
 	var entity;
@@ -236,11 +251,20 @@ SceneManager.prototype.updateActorDisplay = function(actor, charInfo) {
 
 SceneManager.prototype.changeNpcDisplay = function(actor, charInfo) {
 
+	var jobResName = PathHelper.getNpcResName(charInfo.job);
+
+	if(jobResName.match(".gr2") !== null) {
+		// TODO (I guess?)
+		return false;
+	}
+
 	this.createActorAttachment(
 		actor,
-		PathHelper.getNpcResName(charInfo.job),
+		jobResName,
 		SpriteActor.Attachment.BODY
 	);
+	
+	return true;
 
 };
 
@@ -383,7 +407,8 @@ SceneManager.prototype.removeEntity = function(id) {
 };
 
 SceneManager.prototype.unloadEntity = function(entity) {
-
+	
+	entity._active = false;
 	entity.UnloadFromScene();
 
 };
@@ -419,14 +444,6 @@ SceneManager.prototype.bindActorToCamera = function(id) {
 	
 };
 
-/*SceneManager.prototype.SetPCId = function(id) {
-
-	this.pcEntityId = id;
-	
-	//this.tryBindCamera(this.pcEntityId);
-
-};*/
-
 SceneManager.prototype.getCurrentMapName = function() {
 	return this.loader.getMapName();
 };
@@ -434,8 +451,6 @@ SceneManager.prototype.getCurrentMapName = function() {
 SceneManager.prototype.Load = function(mapName) {
 	
 	this._sceneActive = true;
-	
-	this.loader = new MapLoader();
 	
 	var task = this.loader.loadMap(mapName);
 	
@@ -448,21 +463,33 @@ SceneManager.prototype.Load = function(mapName) {
 	
 };
 
+SceneManager.prototype.UnloadAllEntities = function() {
+
+	for(var i = 0; i < this.entityList.length; i++) {
+		this.removeEntity(this.entityList[i]);
+	}
+	
+};
+
 SceneManager.prototype.Unload = function() {
 	
-	if(!this._sceneActive)
+	console.log("Unloading map");
+	
+	if(!this._sceneActive) {
+		console.warn("SceneManager: No scene to unload");
 		return;
+	}
 	
 	if(!this._sceneReady)
 		console.warn("SceneManager: Unloading before scene is ready");
 	
 	clearInterval(this.updateInterval);
 	
-	// TODO: Unload actors, map loader instance
+	this.updateInterval = null;
 	
-	for(var i = 0; i < this.entityList.length; i++) {
-		this.unloadEntity(this.entityList[i]);
-	}
+	this.UnloadAllEntities();
+	
+	delete this.loader;
 	
 	this.reset();
 	
@@ -476,6 +503,7 @@ SceneManager.prototype.Start = function() {
 
 SceneManager.prototype.Stop = function() {
 	
-	// TODO
+	console.log("Stopping map rendering");
 	
+	this.loader.stop();
 };
