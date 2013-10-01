@@ -183,8 +183,24 @@ Ragnarok.prototype.createMainInterface = function() {
 		}
 	}).bind(this);
 	
-	this.session.attachEventListener("OnPlayerChat", (function(msg) {
-		this.chatWindow.writeLine(msg);
+	this.session.attachEventListener("OnPlayerChat", (function(data) {
+		
+		this.chatWindow.writeLine(data.msg);
+		
+		// Note: will receive player's AID for system messages
+		// Probably better to not display messages by 
+		// PACKET_ZC_NOTIFY_PLAYERCHAT and instead display message before
+		// sending chat packet.
+		
+		// Try to map into (name) : (message)
+		var m = data.msg.match(/(.*) : (.*)/);
+		
+		if(m != null) {
+			var str = m[1] + ": " + m[2];
+			this.graphics.scene.SetActorChat(data.GID, str);		
+		}
+		
+		
 	}).bind(this));
 	
 	this.minimap = new Minimap(128, 128);

@@ -132,6 +132,24 @@ SceneManager.prototype.SetActorMovementSpeed = function(actor, value) {
 	
 };
 
+SceneManager.prototype.SetActorChat = function(GID, msg) {
+
+	var actor;
+	
+	if(this.entityMap.has(GID)) {
+	
+		actor = this.entityMap.get(GID);
+		
+		actor.displayMessageLabel(msg);
+	
+	} else {
+		
+		console.warn("SceneManager: Invalid actor (" + GID + ")");
+	
+	}
+
+};
+
 SceneManager.prototype.KillEntity = function(GID) {
 
 	var entity;

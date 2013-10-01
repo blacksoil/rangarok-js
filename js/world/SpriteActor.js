@@ -1218,8 +1218,7 @@ SpriteActor.prototype.removeNameLabel = function() {
 		this.mapInstance.scene.remove(this.nameLabelSprite);
 	}
 	
-	this.displayMessageSprite = null;
-	this.displayMessageCreationTime = -1;
+	this.nameLabelSprite = null;
 
 };
 
@@ -1303,7 +1302,7 @@ SpriteActor.prototype.displayMessageLabel = function(message) {
 	sprite.material.alignment.y = 999.0;
 	sprite.material.depthTest = false;
 	
-	sprite.scale.y = 0.9 * 0.03 * ( textHeight / 14 ) * ( 1080 / mapLoader.screen.height );
+	sprite.scale.y = 0.9 * 0.03 * ( textHeight / 14 ) * ( 1080 / this.mapInstance.screen.height );
 	sprite.scale.x = sprite.scale.y * canvas.width / canvas.height;
 		
 	sprite.position = this.position;

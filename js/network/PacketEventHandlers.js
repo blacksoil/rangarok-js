@@ -160,7 +160,14 @@ var PacketEventHandlers = [
 	
 	function( struct ) {
 		
-		this._fireEvent("OnPlayerChat", charCodeArrayToString(struct.msg) );
+		var GID = struct.constructor == "PACKET_ZC_NOTIFY_CHAT"
+			? struct.GID
+			: this.AID;
+		
+		this._fireEvent("OnPlayerChat", {
+			GID: GID,
+			msg: charCodeArrayToString(struct.msg)
+		});
 	}],
 	
 	// Movement
