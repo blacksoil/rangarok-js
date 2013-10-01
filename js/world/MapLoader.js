@@ -1401,17 +1401,14 @@ MapLoader.prototype.setupModels = function() {
 	var time0 = Date.now();
 	var numModels = 0;
 	
-	for(var i = 0; i < this.rswFileObject.objects.length; i++) {
+	for(var i = 0; i < this.rswModelObjects.length; i++) {
 		
-		//console.log(this.rswFileObject.objects.);
+		var obj = this.rswModelObjects[i];
+		var modelName = obj.modelName;
 		
-		var obj = this.rswFileObject.objects[i];
+		this.createWorldModel(obj, this.rsmFileObjects.get(modelName));
+		numModels++;
 		
-		if(obj.type == 1) {
-			
-			this.createWorldModel(obj, this.rsmFileObjects.get(obj.modelName));
-			numModels++;
-		}
 	}
 	
 	console.log( "%cPerformance: Compiled models in " + (Date.now()-time0) + "ms", "color: #ff6600" );
@@ -2182,33 +2179,37 @@ MapLoader.prototype.loadMap = function(worldResourceName) {
 			var rsmLoader = Deferred();
 			var pipe = new Deferred;
 			
-			for(var i = 0; i < this.rswFileObject.objects.length; i++) {
-						
-				if(this.rswFileObject.objects[i].type == 1 ) {
-					
-					this.rswModelObjectsTotal++;
-					
-					var name = this.rswFileObject.objects[i].modelName;
-					
-					// Indicate loading
-					
-					if(this.rsmFileObjects.has(name))
-						continue;
-										
-					var t = ResourceLoader.getProcessedFileObject(ResourceLoader.FileType.RSM, name).then((function(_name) {
-						
-						return (function(rsm) {
-							
-							this.rsmFileObjectLoaded++;
-							this.rsmFileObjects.set(_name, rsm);
-						
-						}).bind(this);
-					
-					}).call(this, name));
-					
-					rsmLoader.then(t);
-					
+			this.rswModelObjects = this.rswFileObject.objects.filter(function(o) {
+				return o.type == 1;
+			});
+			
+			for(var i = 0; i < this.rswModelObjects.length; i++) {
+			
+				this.rswModelObjectsTotal++;
+				
+				var name = this.rswModelObjects[i].modelName;
+				
+				// Indicate loading
+				
+				if(this.rsmFileObjects.has(name)) {
+					continue;
 				}
+				
+				// Placeholder data to mark as in-load
+				this.rsmFileObjects.set(name, true);
+									
+				var t = ResourceLoader.getProcessedFileObject(ResourceLoader.FileType.RSM, name).then((function(_name) {
+					
+					return (function(rsm) {
+						
+						this.rsmFileObjectLoaded++;
+						this.rsmFileObjects.set(_name, rsm);
+					
+					}).bind(this);
+				
+				}).call(this, name));
+				
+				rsmLoader.then(t);
 				
 			}
 			

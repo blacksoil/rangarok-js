@@ -29,7 +29,7 @@ var ROSession = function() {
 		item: [],
 		actor: null,
 	};
-	
+		
 	this.font = null; // TODO: Use global font option
 	
 };
@@ -132,7 +132,7 @@ ROSession.prototype.GetPCStatus = function(varID) {
 ROSession.prototype.VanishActor = function(GID) {
 
 	if(!this.actors.has(GID)) {
-		console.warn("ROSession: Vanishing actor doesn't exist!");
+		console.warn("ROSession: Vanishing actor (GID: " + GID + ") doesn't exist!");
 		return;
 	}
 
@@ -150,7 +150,7 @@ ROSession.prototype.GetActor = function(GID) {
 ROSession.prototype.KillActor = function(GID) {
 
 	if(!this.actors.has(GID)) {
-		console.warn("ROSession: Dying actor doesn't exist!");
+		console.warn("ROSession: Dying actor (GID: " + GID + ") doesn't exist!");
 		return;
 	}
 
@@ -210,11 +210,13 @@ ROSession.prototype.CreatePcActor = function() {
 		
 	charInfo.objecttype = 0;
 	charInfo.sex = this.Sex;
-	charInfo.GID = this.pc.GID;
+	//charInfo.GID = this.pc.GID;
+	charInfo.GID = this.AID;
 	
-	this.SpawnActor(this.pc.GID, charInfo);
+	//this.SpawnActor(this.pc.GID, charInfo);
+	this.SpawnActor(this.AID, charInfo);
 	
-	this.pc.actor = this.GetActor(this.pc.GID);
+	this.pc.actor = this.GetActor(this.AID);
 		
 };
 

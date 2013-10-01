@@ -484,6 +484,10 @@ SceneManager.prototype.getCurrentMapName = function() {
 	return this.loader.getMapName();
 };
 
+SceneManager.prototype.Ready = function() {
+	return this._sceneReady;
+};
+
 SceneManager.prototype.Load = function(mapName) {
 	
 	this._sceneActive = true;

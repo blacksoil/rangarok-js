@@ -45,7 +45,8 @@ Ragnarok.prototype.ready = function() {
 	
 	this.displayLogin();
 	
-	SoundPlayer.playBgm("01");
+	if(Settings.music)
+		SoundPlayer.playBgm("01");
 	
 };
 
@@ -216,7 +217,7 @@ Ragnarok.prototype.displayMainInterface = function() {
 	
 	// TODO (can't keep reference to actor entity)
 	
-	//var actor = this.graphics.scene.entityMap.get(this.session.pc.GID);
+	//var actor = this.graphics.scene.entityMap.get(this.session.AID);
 	
 	//actor.attachEventListener("OnGatPositionChange", (function( position ) {
 		
@@ -326,7 +327,7 @@ Ragnarok.prototype.removeSessionHandlers = function() {
 Ragnarok.prototype.addPlayerCharacterToScene = function() {
 	
 	this.graphics.scene.AddEntity(
-		this.session.pc.GID,
+		this.session.AID,
 		this.session.pc.actor
 	);
 	
@@ -334,7 +335,7 @@ Ragnarok.prototype.addPlayerCharacterToScene = function() {
 
 Ragnarok.prototype.loadSceneAfter = function() {
 	
-	this.graphics.scene.bindActorToCamera(this.session.pc.GID);
+	this.graphics.scene.bindActorToCamera(this.session.AID);
 	
 	// Update entity positions 
 	// Needs to be done as entities can't currently be positioned while 
@@ -376,7 +377,7 @@ Ragnarok.prototype.loadSceneAfter = function() {
 	
 	this.attachSceneInput();
 	
-	// Report to session that we're ready to continue
+	// Report to session that we're ready to start playing
 	this.session.ReportSceneReady();
 
 };
@@ -401,8 +402,6 @@ Ragnarok.prototype.onLeaveMap = function() {
 
 Ragnarok.prototype.onStateChangeMap = function() {
 	
-	this.session.ReportSceneReady(); 
-	
 	var sceneMap = this.graphics.scene.getCurrentMapName().split(".")[0];
 	var sessionMap = this.session.GetMapName().split(".")[0];
 	
@@ -412,8 +411,11 @@ Ragnarok.prototype.onStateChangeMap = function() {
 		
 		this.graphics.scene.UnloadAllEntities();
 		this.addPlayerCharacterToScene();
-		this.graphics.scene.bindActorToCamera(this.session.pc.GID);
-		this.session.ReportSceneReady();
+		this.graphics.scene.bindActorToCamera(this.session.AID);
+		
+		if(this.graphics.scene.Ready()) {
+			this.session.ReportSceneReady();
+		}
 		
 	} else {
 		

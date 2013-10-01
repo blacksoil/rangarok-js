@@ -207,10 +207,6 @@ var PacketEventHandlers = [
 		
 		// Note standentry6 has the additional state variable (sitting?), newentry6 does not
 		
-		if(struct.constructor == "PACKET_ZC_NOTIFY_MOVEENTRY8") {
-			console.log("aaa");
-		}
-		
 		this.SpawnActor(struct.GID, struct);
 		
 		//PosDir
