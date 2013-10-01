@@ -471,16 +471,18 @@ SpriteActor.prototype.findPath = function(x0, y0, x1, y1) {
 
 	var gat = this.mapInstance.gatFileObject;
 	
-	// First check if destination is reachable
+	// Ensure destination is reachable
 	if(!gat.hasProperty(x1, y1, GAT.BlockProperties.WALKABLE))
 		return false;
 	
 	var h = function(node) {
-		return MOVE_COST * ( Math.abs(x1 - node[0]) + Math.abs(y1 - node[1]) );
-		//var x2 = x1 - node[0];
-		//var y2 = y1 - node[1];
-		//return Math.sqrt( x2 * x2 + y2 * y2 );
-	}
+	
+		var dx = Math.abs(x1 - node[0]);
+		var dy = Math.abs(y1 - node[1]);
+		
+		return 0.5 * MOVE_DIAGONAL_COST * (dx + dy);
+		
+	};
 	
 	var getNeighborNodes = function(x, y) {
 		
@@ -530,9 +532,7 @@ SpriteActor.prototype.findPath = function(x0, y0, x1, y1) {
 	var q = 0;
 	var current;
 	
-	while(openSet.length && q < 200) {
-		
-		q++;
+	while(openSet.length && q++ < 200) {
 		
 		var index = 0;
 		
@@ -554,59 +554,43 @@ SpriteActor.prototype.findPath = function(x0, y0, x1, y1) {
 			var node = current;
 			
 			do {
+				
 				nodeList.push(new THREE.Vector2(node[0], node[1]));
+				
 			} while(node = cameFrom[nodeId(node)]);
 			
 			return nodeList.reverse();
 		}
 		
 		// Remove current from open set
+		
 		openSet.splice(index, 1);
-		// Add current to closed set
 		_openSet[cId] = false;
+		
+		// Add current to closed set
+		
 		closedSet[cId] = true;
 		
 		var neighbors = getNeighborNodes(current[0], current[1]);
 		
-			//console.log('Current', current);
-			
 		for(var i = 0; i < neighbors.length; i++) {
 			
 			var node = neighbors[i];
 			var nId = nodeId(node);
-			
-			var dist, dx0, dy0, dx1, dy1, ddir;
-			
-			dx0 = current[0] - node[0];
-			dy0 = current[1] - node[1];
-			
-			dist = Math.abs(dx0) + Math.abs(dy0);
-			
-			// Diagonal movement costs is 1.4
+			var dx = current[0] - node[0];
+			var dy = current[1] - node[1];
+			var dist = Math.abs(dx) + Math.abs(dy);
 			var gcost = dist > 1 ? MOVE_DIAGONAL_COST : MOVE_COST;
-			
-			//if(!cameFrom[cId]) {
-			//	ddir = 1.0;
-			//} else {
-				 //Turning penalty
-			//	dx1 = cameFrom[cId][0] - current[0];
-			//	dy1 = cameFrom[cId][1] - current[1];
-			//	ddir = ( (dy0 != dy1) || (dx0 != dx1) ) ? 0.0001 : 0;
-			//}
-			
 			var gScore_t = gScore[cId] + gcost;
+			var fScore_t = gScore_t + h(node);
 			
-			//console.log('Child', node);
-			
-			if(closedSet[nId] && gScore_t >= gScore[nId]) {
-				//console.log('Dropping...');
+			if(closedSet[nId] || fScore_t >= (fScore[nId] || Infinity))
 				continue;
-			}
 			
-			if(openSet[nId] !== true || gScore_t < gScore[nId]) {
+			if(openSet[nId] !== true || fScore_t < fScore[nId]) {
 				cameFrom[nId] = current;
 				gScore[nId] = gScore_t;
-				fScore[nId] = gScore_t + h(node);
+				fScore[nId] = fScore_t;
 				// Add to openset
 				if(_openSet[nId] !== true) {
 					_openSet[nId] = true;
@@ -617,8 +601,8 @@ SpriteActor.prototype.findPath = function(x0, y0, x1, y1) {
 		
 	}
 	
-	//console.error("Pathfinding failed in 100 iterations", current, x0, y0, x1, y1);
-	// Failed!
+	console.warn("SpriteActor: Pathfinding failed.");
+	
 	return null;
 	
 };
