@@ -215,10 +215,16 @@ SpriteActor.prototype.SetGatPosition = function(x, y) {
 	
 	if(this.isMoving) {
 		// 
-		this.isMoving = false;	
+		this.isMoving = false;
 	}
 	
-	this.gatPosition = new THREE.Vector2(x, y);
+	var fx = Math.floor(x);
+	var fy = Math.floor(y);
+	
+	if(fx < x || fy < y)
+		console.warn("SpriteActor: Incorrect GAT tile position set");
+	
+	this.gatPosition = new THREE.Vector2(fx, fy);
 };
 
 SpriteActor.prototype.AbruptStop = function() {

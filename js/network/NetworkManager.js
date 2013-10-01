@@ -101,8 +101,8 @@ NetworkManager.Util = {
 		var sy0 = p[5] & 0x0f;
 		
 		return {
-			x0: x0 + sx0 * 0.0625 - 0.5, 
-			y0: y0 + sy0 * 0.0625 - 0.5, 
+			x0: x0 /*+ sx0 * 0.0625 - 0.5*/, // 
+			y0: y0 /*+ sy0 * 0.0625 - 0.5*/,
 			x1: x1, 
 			y1: y1
 		};
