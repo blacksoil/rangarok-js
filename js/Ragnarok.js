@@ -254,7 +254,7 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 
 	this.session.attachEventListener("OnActorAppear", (function(session_actor) {
 		
-		console.warn("Actor appeared");
+		//console.warn("Actor appeared");
 		
 		this.graphics.scene.AddEntity(
 			session_actor.GID,
@@ -265,7 +265,7 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 	
 	this.session.attachEventListener("OnActorDie", (function(session_actor) {
 		
-		console.warn("Actor died");
+		//console.warn("Actor died");
 		
 		this.graphics.scene.KillEntity(
 			session_actor.GID
@@ -275,7 +275,7 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 	
 	this.session.attachEventListener("OnActorVanish", (function(session_actor) {
 		
-		console.warn("Actor vanished");
+		//console.warn("Actor vanished");
 		
 		this.graphics.scene.RemoveEntity(
 			session_actor.GID
@@ -285,7 +285,7 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 	
 	this.session.attachEventListener("OnActorPositionChange", (function(session_actor) {
 		
-		console.warn("Actor changed position");
+		//console.warn("Actor changed position");
 		
 		this.graphics.scene.SetEntityPosition(
 			session_actor.GID,
@@ -297,7 +297,7 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 	
 	this.session.attachEventListener("OnActorMovement", (function(session_actor) {
 		
-		console.warn("Actor moved");
+		//console.warn("Actor moved");
 		
 		this.graphics.scene.MoveEntityPosition(
 			session_actor.GID,
@@ -512,7 +512,7 @@ Ragnarok.prototype.onStateCharSelect = function() {
 			
 			// validation should be done first
 			// simple for now...
-			if( event.charId === null ) {
+			if( event.charId === null || event.charId < 0 ) {
 				return;
 			}
 			

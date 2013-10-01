@@ -102,11 +102,11 @@ ROSession.prototype.SetPCStatus = function(varID, status) {
 	this.pc.status[varID] = status; 
 	
 	if(Settings.DEBUG) {
-		for(var i in GameVar) {
-			if(GameVar[i] == varID) {
-				console.log(i + " is now " + status);
-			}
-		}	
+		//for(var i in GameVar) {
+		//	if(GameVar[i] == varID) {
+		//		console.log(i + " is now " + status);
+		//	}
+		//}	
 	}
 	
 	if(varID == GameVar.SPEED) {

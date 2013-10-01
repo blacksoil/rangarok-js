@@ -1,8 +1,16 @@
 var MapLoader = function() {
+
 	EventHandler.call(this);
+
 	this.reset();
 	this.setup();
+	
+	// Hack 
+	MapLoader.SESSION_CONTEXT_ID += 1;
+	
 };
+
+MapLoader.SESSION_CONTEXT_ID = 0;
 
 MapLoader.prototype = Object.create(EventHandler.prototype);
 
@@ -2128,7 +2136,7 @@ MapLoader.prototype.__defineGetter__("screen", function() {
 });
 
 MapLoader.prototype.loadMap = function(worldResourceName) {
-			
+		
 	this.worldResourceName = worldResourceName;
 	
 	Tick();

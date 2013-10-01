@@ -992,7 +992,7 @@ SpriteActor.prototype.Update = function(camera) {
 			SpriteActor.Attachment.SHADOW, 
 			0,
 			0.0, 
-			-1.0
+			0.0
 		);
 	}
 	
@@ -1084,9 +1084,12 @@ SpriteActor.CLabelOutlineColor = new THREE.Color(0x000000);
 SpriteActor.prototype.alignMessageSprite = function() {
 	
 	var a = this.displayMessageSprite.material.alignment;
-		
-	a.y = SpriteActor.CMessageBoxAlignmentY / ( this.mapInstance.controls.zoom ); // ! todo: increase cohesion
-	a.y += 20 * a.y * (0.03 - this.displayMessageSprite.scale.y);
+	
+	a.y = 100;
+	a.x = 100;
+	
+	//a.y = SpriteActor.CMessageBoxAlignmentY / ( this.mapInstance.controls.zoom ); // ! todo: increase cohesion
+	//a.y += 20 * a.y * (0.03 - this.displayMessageSprite.scale.y);
 };
 
 SpriteActor.prototype.alignNameLabelSprite = function() {
@@ -1163,7 +1166,7 @@ SpriteActor.prototype.generateNameLabel = function() {
 	
 	var sprite = new THREE.Sprite(new THREE.SpriteMaterial({
 		map: texture,
-		useScreenCoordinates: false,
+		useScreenCoordinates: true,
 		alignment: new THREE.Vector2,
 		transparent: true,
 		opacity: 1.0,
