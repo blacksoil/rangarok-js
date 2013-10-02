@@ -1906,7 +1906,6 @@ MapLoader.prototype.start = function() {
              
              if( tile ) {
 				
-				//var h = - this.gatFileObject.getBlockAvgDepth( cxd, czd );
 				var h = - this.subGatPositionToMapHeight( cxd, czd, cxm, czm );
 				
 				if( Math.abs(h - cpt.y) < 0.5 )
@@ -1940,7 +1939,7 @@ MapLoader.prototype.start = function() {
 		this.mouseGatPosition.y = z;
 		
 		// Set coordinate pointer		
-		if(this.gatFileObject.getBlock(this.mouseGatPosition.x, this.mouseGatPosition.y)) {
+		if(this.gatFileObject.isValidBlock(this.mouseGatPosition.x, this.mouseGatPosition.y)) {
 			
 			if(!this.gatFileObject.hasProperty(
 				this.mouseGatPosition.x, 
