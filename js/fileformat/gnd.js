@@ -38,17 +38,17 @@ GND.prototype.getTileLightLevel = function(x, y) {
 	var tile = this.getTile(x, y);
 	
 	if(!tile)
-		return 0;
+		return 1.0;
 	
 	var topSurfaceId = tile[4];
 	
 	if(!topSurfaceId)
-		return 0;
+		return 1.0;
 	
 	var surface = this.surfaces[topSurfaceId];
 	
 	if(!surface)
-		return 0;
+		return 1.0;
 	
 	return this.lightMapSaturationLevels[surface.lightMapId || 0] / 12495;
 };
@@ -78,9 +78,6 @@ GND.prototype.generateLightMaps = function() {
 			//brightness		1*lmapWidth*lmapHeight		unsigned brightness values of the grid (must be 8x8) (uchar[8][8])
 			//color			3*lmapWidth*lmapHeight		RGB/BGR(?) colors of the grid (must be 8x8) (uchar[3][8][8])
 			
-			//brightness: new Uint8Array( buffer.slice( p, p + dim ) ),
-			//color: new Uint8Array( buffer.slice( p + dim, p + 4*dim ) ),
-			
 			for( var k = 0; k < tsize; k++ ) {
 				
 				var pk = p + k;
@@ -91,38 +88,17 @@ GND.prototype.generateLightMaps = function() {
 				
 				this.lightMapSaturationLevels[i] += lmap.brightness[ps];
 				
-				//lightMapColor[ 4*pk + 0 ] = lmap.brightness[ ps ];
-				//lightMapColor[ 4*pk + 1 ] = lmap.brightness[ ps ];
-				//lightMapColor[ 4*pk + 2 ] = lmap.brightness[ ps ];
-				//lightMapColor[ 4*pk + 3 ] = 255;
-				
-				
-				//if( lmap.color[ pc + 0 ] != 0 
-				//|| lmap.color[ pc + 1 ] != 0 
-				//|| lmap.color[ pc + 2 ] != 0 
-				//) {
-				//	console.log('not zero');
-				//}
-				
 				// Posterization
 				
 				var r = (~~( lmap.color[ pc + 0 ] / this.posterizationLevel )) * this.posterizationLevel;
 				var g = (~~( lmap.color[ pc + 1 ] / this.posterizationLevel )) * this.posterizationLevel;
 				var b = (~~( lmap.color[ pc + 2 ] / this.posterizationLevel )) * this.posterizationLevel;
 				
-				//lightMapShadow[ pk ] = lmap.brightness[ ps ];
-				//lightMapColor[ 4*pk + 0 ] = 255;
-				//lightMapColor[ 4*pk + 1 ] = 255;
-				//lightMapColor[ 4*pk + 2 ] = 255;
-				
 				lightMapColor[ 4*pk + 0 ] = r;
 				lightMapColor[ 4*pk + 1 ] = g;
 				lightMapColor[ 4*pk + 2 ] = b;
 				lightMapColor[ 4*pk + 3 ] = lmap.brightness[ ps ];
-				//lightMapColor[ 4*pk + 3 ] = 255;
 				
-				
-				//lightMapColor[ 4*pk + 3 ] = lmap.brightness[ ps ];
 			}
 			
 		}

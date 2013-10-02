@@ -162,7 +162,7 @@ MapLoader.prototype.generateAtlasTexture = function(textureNameList) {
 		var textureName = textureNameList[i];
 	
 		if(Settings.useAlphaTextures && Settings.alphaTextureFormat !== undefined) {
-			textureName = textureName.replace(/.(bmp|tga)/, "." + Settings.alphaTextureFormat);
+			textureName = textureName.replace(/.(bmp|tga)/i, "." + Settings.alphaTextureFormat);
 		}
 		
 		batch
@@ -223,7 +223,7 @@ MapLoader.prototype.generateAtlasTexture = function(textureNameList) {
 			var t = new THREE.Texture(canvas);
 			
 			t.minFilter = THREE.LinearFilter;
-			t.magFilter = THREE.NearestFilter;
+			t.magFilter = THREE.LinearFilter;
 			
 			t.needsUpdate = true;
 			t.flipY = false;
@@ -596,7 +596,13 @@ MapLoader.prototype.createGround = function() {
 	
 	for( var i = 0; i < this.gndFileObject.textures.length; i++ ) {
 		
-		var texture = ResourceLoader.getTexture(this.gndFileObject.textures[i]);
+		var textureName = this.gndFileObject.textures[i];
+		
+		if(Settings.useAlphaTextures && Settings.alphaTextureFormat !== undefined) {
+			textureName = textureName.replace(/.(bmp|tga)/i, "." + Settings.alphaTextureFormat);
+		}
+		
+		var texture = ResourceLoader.getTexture(textureName);
 		
 		texture.flipY = false;
 		//texture.minFilter = THREE.NearestFilter;
@@ -2019,7 +2025,11 @@ MapLoader.prototype.start = function() {
 				
 				var gl = this.renderer.getContext();
 				
+				var color = this.renderer.getClearColor().getHex();
+				
+				this.renderer.setClearColor(0x000000);
 				this.renderer.render(this.scene, this.camera, this.colorPickingRenderTarget);
+				this.renderer.setClearColor(color);
 				
 				var u32 = new Uint8Array(4);
 				
@@ -2150,8 +2160,13 @@ MapLoader.prototype.__defineGetter__("screen", function() {
 });
 
 MapLoader.prototype.loadMap = function(worldResourceName) {
-		
+	
 	this.worldResourceName = worldResourceName;
+	
+	if(worldResourceName.match("gonryun.rsw") !== null 
+		|| worldResourceName.match("yuno.rsw") !== null ) {
+		this.renderer.setClearColor(0x6699cc);
+	}
 	
 	// Guess file names and start loading instead of waiting for 
 	// header data from RSW ...
