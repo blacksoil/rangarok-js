@@ -614,25 +614,26 @@ MapLoader.prototype.createGround = function() {
 	// Alternative UVs for lightmap
 	groundGeometry.faceVertexUvs[1] = [];
 	
-	var surfaces = ['frontSurfaceId', 'rightSurfaceId', 'topSurfaceId'];
-			
 	var surfaceVerticeAligments = [
-		[	[0, 1, 'lowerLeftHeight'],
-			[1, 1, 'lowerRightHeight'],
-			[1, 1, 'upperRightHeight'],
-			[0, 1, 'upperLeftHeight']
+		[	[0, 1, 2], // lowerLeftHeight
+			[1, 1, 3], // lowerRightHeight
+			[1, 1, 1], // upperRightHeight
+			[0, 1, 0] // upperLeftHeight
 		], [
-			[1, 1, 'lowerRightHeight'],
-			[1, 0, 'upperRightHeight'],
-			[1, 0, 'upperLeftHeight'],
-			[1, 1, 'lowerLeftHeight']
+			[1, 1, 3], // lowerRightHeight
+			[1, 0, 1], // upperRightHeight
+			[1, 0, 0], // upperLeftHeight
+			[1, 1, 2] // lowerLeftHeight
 		], [
-			[0, 0, 'upperLeftHeight'],
-			[1, 0, 'upperRightHeight'],
-			[1, 1, 'lowerRightHeight'],
-			[0, 1, 'lowerLeftHeight']
+			[0, 0, 0], // upperLeftHeight
+			[1, 0, 1], // upperRightHeight
+			[1, 1, 3], // lowerRightHeight
+			[0, 1, 2] // lowerLeftHeight
 		]
 	];
+	
+	// frontSurfaceId, rightSurfaceId, topSurfaceId
+	var surfaces = [5, 6, 4];
 	
 	var neighborTileId = [
 		[0, 1],
@@ -701,13 +702,11 @@ MapLoader.prototype.createGround = function() {
 					
 					// Add vertex colors for top surface
 					
-					if(surfaceIdx == 'topSurfaceId') {
+					if(surfaceIdx == 4) { // topSurfaceId
 						
 						var maxHeight = Math.max(
-							tile.lowerLeftHeight,
-							tile.upperLeftHeight,
-							tile.lowerRightHeight,
-							tile.lowerRightHeight
+							tile[0], tile[1],
+							tile[2], tile[3]
 						);
 						
 						if(this.rswFileObject.header.waterLevel < maxHeight) {
@@ -736,8 +735,8 @@ MapLoader.prototype.createGround = function() {
 							
 							var tile = this.gndFileObject.getTile(x + v[i][0], y + v[i][1]) || {};
 							
-							if(tile['topSurfaceId'] >= 0 && this.gndFileObject.surfaces[tile['topSurfaceId']]) {
-								var color32dpp = this.gndFileObject.surfaces[ tile['topSurfaceId'] ].color_bgra;
+							if(tile[4] >= 0 && this.gndFileObject.surfaces[tile[4]]) {
+								var color32dpp = this.gndFileObject.surfaces[ tile[4] ].color_bgra;
 								face.vertexColors[i] = (new THREE.Color).setRGB(
 									color32dpp[2] / 255,
 									color32dpp[1] / 255,

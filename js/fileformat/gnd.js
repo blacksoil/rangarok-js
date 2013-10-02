@@ -40,7 +40,7 @@ GND.prototype.getTileLightLevel = function(x, y) {
 	if(!tile)
 		return 0;
 	
-	var topSurfaceId = tile.topSurfaceId;
+	var topSurfaceId = tile[4];
 	
 	if(!topSurfaceId)
 		return 0;
@@ -150,10 +150,6 @@ GND.prototype.__defineGetter__('height', function() {
 	return this.header.height;
 });
 
-GND.prototype.getTile = function( x, y ) {
-	return this.grid[ x + y * this.width ];
-}
-
 GND.prototype.parse = function( buffer ) {
 	
 	var data = new DataView( buffer );
@@ -191,8 +187,8 @@ GND.prototype.parse = function( buffer ) {
 	
 	p += 2;
 	
-	//if( this.header.version.compareTo(1, 6) < 0 )
-		//throw 'GND :: Unable to read file version ' + this.header.version.toString;
+	if( this.header.version.compareTo(1, 7) < 0 )
+		throw 'GND :: Unable to read file version ' + this.header.version.toString;
 	
 	this.header.width = data.getInt32( p, true );
 	this.header.height = data.getInt32( p + 4, true );
@@ -286,30 +282,31 @@ GND.prototype.parse = function( buffer ) {
 		p += 40;
 	}
 	
-	var block;
+	var blockDat = buffer.slice(p);
 	
-	for( var i = 0; i < this.header.width * this.header.height; i++ ) {
-		
-		block = {
-			upperLeftHeight: data.getFloat32( p, true ),
-			upperRightHeight: data.getFloat32( p + 4, true ),
-			lowerLeftHeight: data.getFloat32( p + 8, true ),
-			lowerRightHeight: data.getFloat32( p + 12, true )
-		};
-		
-		if( this.header.version.compareTo( 1, 7 ) >= 0 ) {
-			block.topSurfaceId = data.getInt32( p + 16, true );
-			block.frontSurfaceId = data.getInt32( p + 20, true );
-			block.rightSurfaceId = data.getInt32( p + 24, true );
-			p += 28;
-		} else {
-			block.topSurfaceId = data.getInt16( p + 16, true );
-			block.frontSurfaceId = data.getInt16( p + 18, true );
-			block.rightSurfaceId = data.getInt16( p + 20, true );
-			p += 22;
-		}
-		
-		this.grid.push( block );
-	}
+	this.blockFloat32Data = new Float32Array(blockDat);
+	this.blockInt32Data = new Int32Array(blockDat);
 	
-}
+};
+
+GND.SIZEOF_STRUCT_BLOCK = 28;
+
+GND.prototype.offsetToBlock = function(x, y) {
+	return (this.header.width * y + x) * GND.SIZEOF_STRUCT_BLOCK;
+};
+
+GND.prototype.getTile = function( x, y ) {
+	
+	var p = this.offsetToBlock(x, y) / 4;
+
+	return [
+		this.blockFloat32Data[p+0], // upperLeft
+		this.blockFloat32Data[p+1], // upperRight
+		this.blockFloat32Data[p+2], // lowerLeft
+		this.blockFloat32Data[p+3], // lowerRight
+		this.blockInt32Data[p+4], // topSurfaceId
+		this.blockInt32Data[p+5], // frontSurfaceId
+		this.blockInt32Data[p+6] // rightSurfaceId
+	];
+	
+};
