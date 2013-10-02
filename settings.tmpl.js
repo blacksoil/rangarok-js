@@ -19,6 +19,12 @@ var Settings = {
 	// 1 = tcp/4 (requires desktop=true)
 	socketType: 0,
 	
+	// Set to true if you have converted the data folder textures to 
+	// transparent images. (Vastly improves map loading speed)
+	
+	useAlphaTextures: false,
+	alphaTextureFormat: "gif",
+	
 	// Debug
 	
 	DEBUG: true,

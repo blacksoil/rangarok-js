@@ -94,15 +94,15 @@ SpriteActor.PlayerActionIndices = {
 	WALK: 1,
 	SIT: 2,
 	PICK: 3,
-	ACTION1: 4,
-	ATTACK1: 5,
+	ACTION: 4, // 
+	ATTACK: 5,
 	HURT1: 6,
 	HURT2: 7,
 	DIE: 8,
 	ACTION2: 9,
-	ATTACK2: 10,
-	ATTACK3: 11,
-	ACTION3: 12
+	ATTACK2: 10, // CRUSADER=MACE, TWOHAND_MACE, TWOHAND_SWORD, SHORTSWORD, SWORD
+	ATTACK3: 11, // CRUSADER=SPEAR, TWOHAND_SPEAR (broken)
+	ACTION3: 12 // NONE (hit)?
 };
 
 SpriteActor.Direction = {
@@ -122,7 +122,10 @@ SpriteActor.Attachment = {
 	HEAD: 2,
 	TOP: 3,
 	MID: 4,
-	BOTTOM: 5
+	BOTTOM: 5,
+	WEAPON: 6,
+	WEAPON_EFFECT: 7,
+	SHIELD: 8
 };
 
 SpriteActor.AttachmentPriority = {
@@ -132,6 +135,9 @@ SpriteActor.AttachmentPriority = {
 	3: 400, // TOP
 	4: 300, // MID
 	5: 200, // BOTTOM
+	6: 700, // WEAPON
+	7: 600, // WEAPON_EFFECT
+	8: 500, // SHIELD
 };
 
 SpriteActor.prototype.Die = function() {
@@ -903,6 +909,13 @@ SpriteActor.prototype.__defineGetter__("faceObscured", function() {
 	return this.motionDirection >= 3 && this.motionDirection <= 5;
 });
 
+SpriteActor.prototype.__defineGetter__("displayWeapon", function() {
+	return this.Action == this.ActionSet.ATTACK
+	 || this.Action == this.ActionSet.ATTACK2
+	 || this.Action == this.ActionSet.ATTACK3
+	 || this.Action == this.ActionSet.ACTION;
+});
+
 SpriteActor.prototype.Update = function(camera) {
 	
 	if(!(this.lastUpdate > 0))
@@ -987,8 +1000,9 @@ SpriteActor.prototype.Update = function(camera) {
 	}
 	
 	// Head & headgear attachments
+	// Weapon attachment
 	
-	var attachments = [SpriteActor.Attachment.HEAD, SpriteActor.Attachment.TOP, SpriteActor.Attachment.MID, SpriteActor.Attachment.BOTTOM];
+	var attachments = [SpriteActor.Attachment.HEAD, SpriteActor.Attachment.TOP, SpriteActor.Attachment.MID, SpriteActor.Attachment.BOTTOM, SpriteActor.Attachment.WEAPON, SpriteActor.Attachment.WEAPON_EFFECT];
 	
 	var bodyAttachmentOffset = attachmentPointers[0];
 	
@@ -1005,18 +1019,37 @@ SpriteActor.prototype.Update = function(camera) {
 				continue;
 			}
 			
+			var frameId;
+			
+			if(attachment == SpriteActor.Attachment.HEAD) {
+				frameId = this.lookingDirection;
+			} else {
+				frameId = attachmentFrameId;
+			}
+			
 			var currentAttachmentOffset = this
 				.getAttachment(attachment)
 				.actFileObject
-				.actions[this.motion][this.lookingDirection]
+				.actions[this.motion][frameId]
 				.attachmentPointers[0];
+			
+			var imfX = bodyAttachmentOffset.x;
+			var imfY = bodyAttachmentOffset.y;
+			
+			if(currentAttachmentOffset) {
+				imfX += -currentAttachmentOffset.x;
+				imfY += -currentAttachmentOffset.y;
+			} else {
+				imfX = 0;
+				imfY = 0;
+			}
 			
 			this.UpdateAttachment(
 				dt,
 				attachment, 
-				this.lookingDirection,
-				bodyAttachmentOffset.x - currentAttachmentOffset.x, 
-				bodyAttachmentOffset.y - currentAttachmentOffset.y
+				frameId,
+				imfX, 
+				imfY
 			);
 		}
 	};

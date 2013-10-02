@@ -154,18 +154,30 @@ MapLoader.prototype.generateAtlasTexture = function(textureNameList) {
 	
 	var textures = new Map();
 	
+	var t0 = Date.now();
+	
 	/* Load all textures in name list */
-	for(var i = 0; i < textureNameList.length; i++)
+	for(var i = 0; i < textureNameList.length; i++) {
+	
+		var textureName = textureNameList[i];
+	
+		if(Settings.useAlphaTextures && Settings.alphaTextureFormat !== undefined) {
+			textureName = textureName.replace(/.(bmp|tga)/, "." + Settings.alphaTextureFormat);
+		}
+		
 		batch
-			.then(ResourceLoader.getTextureImage.bind(this, textureNameList[i]))
+			.then(ResourceLoader.getTextureImage.bind(this, textureName))
 			.then((function(name) {
 				return function(image) {
 					textures.set(name, image);
 				};
 			})(textureNameList[i]));
+	}
 	
 	batch.finally((function() {
 		
+		console.warn("Downloaded textures in " + (Date.now() - t0) + "ms");
+		t0 = Date.now();
 		// Combine Image to DataTexture
 		
 		var atlasData = new MapLoader.AtlasDataObject(),
@@ -188,18 +200,23 @@ MapLoader.prototype.generateAtlasTexture = function(textureNameList) {
 		
 		var addTexture = function() {
 			
-			/* Clear magenta (255, 0, 255) */
-			var imgd = context.getImageData(0, 0, width, height);
+			if(Settings.useAlphaTextures !== true) {
+				
+				/* Clear magenta (255, 0, 255) */
 			
-			for(var i = 0; i < imgd.data.length; i += 4) {
-				if(imgd.data[i] > 0xf0
-					&& imgd.data[i+1] < 0x0a
-					&& imgd.data[i+2] > 0xf0
-				)
-					imgd.data[i+3] = 0;
+				var imgd = context.getImageData(0, 0, width, height);
+				
+				for(var i = 0; i < imgd.data.length; i += 4) {
+					if(imgd.data[i] > 0xf0
+						&& imgd.data[i+1] < 0x0a
+						&& imgd.data[i+2] > 0xf0
+					)
+						imgd.data[i+3] = 0;
+				}
+				
+				context.putImageData(imgd, 0, 0);
+
 			}
-			
-			context.putImageData(imgd, 0, 0);
 			
 			// Create texture
 			
@@ -350,6 +367,8 @@ MapLoader.prototype.generateAtlasTexture = function(textureNameList) {
 		addTexture.call(this);
 		
 		console.log("Info: Created texture atlas in " + (aId+1) + " parts");
+		
+		console.warn("Merged textures in " + (Date.now() - t0) + "ms");
 		
 		pipe.success(atlasData);
 		
@@ -1461,18 +1480,12 @@ MapLoader.prototype.setupWorld = function() {
 	this.createGround();
 	console.log( "%cPerformance: Compiled ground in " + (Date.now()-time0) + "ms", "color: #ff6600" );
 	
-	//Tick("Creating ground");
-	
 	// Create the coordinate pointer
 	this.createCoordinatePointer();
-	
-	//Tick("Creating coordinate pointer");
 	
 	this.scene.add(this.coordinatePointer.mesh);
 	
 	this.setupWorldLighting();
-
-	//Tick("Creating world lighting");
 	
 };
 
@@ -1813,6 +1826,8 @@ MapLoader.prototype.OnMouseWheelDown = function(e) {
 
 MapLoader.prototype.start = function() {
 	
+	var t0 = Date.now();
+	
 	if(IndoorRswTable[ this.getMapName() ] === true) {
 	
 		var toRad = Math.PI / 180;
@@ -2063,7 +2078,8 @@ MapLoader.prototype.start = function() {
 	}).bind(this);
 
 	animate();
-
+	
+	console.warn("Starting up took " + (Date.now() - t0) + "ms");
 };
 
 MapLoader.prototype.stop = function() {
@@ -2137,22 +2153,20 @@ MapLoader.prototype.loadMap = function(worldResourceName) {
 		
 	this.worldResourceName = worldResourceName;
 	
-	Tick();
-	
 	// Guess file names and start loading instead of waiting for 
 	// header data from RSW ...
 	var gndName = this.worldResourceName.replace(/rsw$/, "gnd");
 	var gatName = this.worldResourceName.replace(/rsw$/, "gat"); 
 	
-	var loadPromise = new Deferred();
-	var loadFilePipe = Deferred();
-	var loadBranchMerge = Deferred();
+	var onDone = new Deferred();
+	var onBegin = Deferred();
+	var onSetup = Deferred();
 	
 	var LOAD_RSM = true;
 	
 	// Start loading RSW
 	
-	var rswContentPipe = loadFilePipe.then(ResourceLoader.getRsw(worldResourceName).then(
+	var onRswLoad = onBegin.then(ResourceLoader.getRsw(worldResourceName).then(
 		(function(data) {
 			console.log("Loaded RSW");
 			this.rswFileObject = new RSW(data);
@@ -2160,7 +2174,8 @@ MapLoader.prototype.loadMap = function(worldResourceName) {
 	));
 	
 	// Start loading GND
-	loadFilePipe.then(ResourceLoader.getGnd(gndName).then(
+	
+	var onGndLoad = onBegin.then(ResourceLoader.getGnd(gndName).then(
 		(function(data) {
 			console.log('Loaded GND');
 			this.gndFileObject = new GND(data);
@@ -2168,18 +2183,17 @@ MapLoader.prototype.loadMap = function(worldResourceName) {
 	));
 	
 	// Start loading GAT
-	var gatLoader = loadFilePipe.then(ResourceLoader.getGat(gatName).then(
+
+	var onGatLoad = onBegin.then(ResourceLoader.getGat(gatName).then(
 		(function(data) {
 			console.log('Loaded GAT');
 			this.gatFileObject = new GAT(data);
 		}).bind(this)
 	));
 	
-	// On RSW loaded
+	// On RSW loaded => load RSM
 	
-	if(LOAD_RSM) {
-	
-	var rsmContentPipe = rswContentPipe
+	var onRsmLoad = onRswLoad
 		.then((function() {
 	
 			var rsmLoader = Deferred();
@@ -2227,35 +2241,58 @@ MapLoader.prototype.loadMap = function(worldResourceName) {
 			
 			return pipe;
 			
-		}).bind(this))
-		
-	}
+		}).bind(this));
 	
-	// On RSW, GND and GAT loaded, branch in
-	loadBranchMerge.then(
-		loadFilePipe.finally(this.setupWorld.bind(this))
-		.then((function() {
-			if(LOAD_RSM) {
-				return Deferred()
-					.then(rsmContentPipe)
-					.then(this.setupModelTextures.bind(this))
-					.then(this.setupModels.bind(this))
-			}
-		}).bind(this))
-	);
-	
-	loadBranchMerge.finally((function() {
+	onSetup.then(onGndLoad.then((function() {
+		console.warn("Setting up world!");
 		
+		this.setupWorld();
+	}).bind(this)));
+	
+	var t1;
+	
+	onSetup.then(onGndLoad.then((function() {
+	
+		var t = new Deferred();
+	
+		onRsmLoad
+			.then(function() {
+				console.warn("Setting up textures and models!");
+				t1 = Date.now();
+			})
+			.then(this.setupModelTextures.bind(this))
+			.then(function() {
+				console.warn("Loading model texture took " + (Date.now() - t1) + "ms");
+			})
+			.then(this.setupModels.bind(this))
+			.then(function() {
+				console.warn("Done setting up textures and models!");
+				t.success();
+			});
+	
+		return t;
+	
+	}).bind(this)));
+	
+	onSetup.then(onGatLoad);
+	
+	onSetup.finally((function() {
+		
+		console.warn("Setup is done!");
+		
+		var t0 = Date.now();
 		// Render once to finalize scene in THREE.js
 		this.renderer.render(this.scene, this.camera);
 		
-		// Clear any loading data here
-		this.derefTempObjects();
+		console.warn("Initial render took " + (Date.now() - t0) + "ms");
 		
-		loadPromise.success();
+		// Clear any loading data here
+		//this.derefTempObjects();
+		
+		onDone.success();
 	}).bind(this));
 	
-	return loadPromise;
+	return onDone;
 	
 };
 

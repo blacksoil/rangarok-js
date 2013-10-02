@@ -426,7 +426,15 @@ ResourceLoader.getProcessedFileObject = function(fileType, pathName) {
 			ResourceLoader._processedFileRequests.set(id, []);
 			
 			var parser = ResourceLoader.FileFormatParser[fileType];
-			var pobj = new parser(data);
+			
+			var pobj;
+			
+			try {
+				pobj = new parser(data);
+			} catch(e) {
+				console.warn("ResourceLoader: Error parsing file. (" + String(e) + ")");
+				pobj = null;
+			}
 			
 			ResourceLoader._processedFileObjects.set(id, pobj);
 						

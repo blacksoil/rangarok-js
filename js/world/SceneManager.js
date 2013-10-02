@@ -414,8 +414,15 @@ SceneManager.prototype.createActorAttachment = function(actor, resName, attachme
 	// Return task
 	
 	return task.finally((function() {
+		
+		if(actFileObject == null || sprFileObject == null) {
+			console.warn("SceneManager: Error loading attachment " + resName);
+			return;
+		}
+	
 		actor.SetAttachment(attachmentType, sprFileObject, actFileObject);
 		actor.addAttachmentToScene(this.loader.scene, attachmentType);
+		
 	}).bind(this))
 	
 };
