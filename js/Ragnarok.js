@@ -297,7 +297,11 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 	
 	this.session.attachEventListener("OnActorMovement", (function(session_actor) {
 		
-		//console.warn("Actor moved");
+		
+		//console.warn("Actor moved", session_actor.x,
+		//	session_actor.y,
+		//	session_actor.x1,
+		//	session_actor.y1);
 		
 		this.graphics.scene.MoveEntityPosition(
 			session_actor.GID,

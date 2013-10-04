@@ -98,31 +98,9 @@ SceneManager.prototype.MoveEntityPosition = function(GID, x, y, x1, y1, moveStar
 		return;
 	}
 	
-	// TODO: Check x, y vs. entity's gat position
-	//entity.SetGatPosition(x, y);
-	
 	var entity = this.entityMap.get(GID);
 	
-	if(entity.gatPosition.x != x || entity.gatPosition.y != y) {
-		//console.log("Incorrect gat position, setting to ", x, y);
-		
-		var dx = Math.abs(entity.gatPosition.x - x);
-		var dy = Math.abs(entity.gatPosition.y - y);
-		
-		// Tolerate tile displacement of 1 to avoid sprites "jumping"
-		if(dx > 1 || dy > 1) {
-			entity.SetGatPosition(x, y);
-		}
-		
-		// TODO
-		// check "star" area (dx*dx + dy*dy <= 25)
-		// 	if true:	fake display of walking from current position
-		//				to (x1,y1). use path cost/movement time of (x,y)->(x1,y1)
-		//  else:		set gat position directly
-		
-	}
-	
-	entity.MoveToGatPosition(x1, y1, moveStartTime);
+	entity.MoveToGatPosition(x, y, x1, y1, moveStartTime);
 
 };
 

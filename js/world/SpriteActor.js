@@ -23,7 +23,10 @@ var SpriteActor = function(mapInstance, name) {
 	
 	this._isMoving = false;
 	this._cancelMove = false;
-		
+	
+	this.movementPath = null;
+	this.movementPathSpeedFactor = 1.0;
+	
 	this.movementSpeed = 150;
 	this.lastUpdate = -1;
 	this.movementTime = 0;
@@ -200,6 +203,7 @@ SpriteActor.prototype.__defineSetter__("isMoving", function(value) {
 });
 
 SpriteActor.prototype.__defineSetter__("gatPosition", function(value) {
+
 	this.mapInstance.updateEntityGatPosition(this, value.x, value.y, this._gatPosition.x, this._gatPosition.y);
 	this._gatPosition = value;
 	
@@ -222,6 +226,7 @@ SpriteActor.prototype.SetGatPosition = function(x, y) {
 	if(this.isMoving) {
 		// 
 		this.isMoving = false;
+		this._requestedNewPath = null;
 	}
 	
 	var fx = Math.floor(x);
@@ -238,7 +243,7 @@ SpriteActor.prototype.AbruptStop = function() {
 	this.CancelMove();
 	this.isMoving = false;
 
-}
+};
 
 SpriteActor.prototype.CancelMove = function() {
 	if(this.isMoving) {
@@ -248,36 +253,107 @@ SpriteActor.prototype.CancelMove = function() {
 	return false;
 };
 
-SpriteActor.prototype.MoveToGatPosition = function(x, y, moveStartTime) {
+SpriteActor.prototype.MoveToGatPosition = function(x0, y0, x1, y1, moveStartTime) {
 	
 	moveStartTime = moveStartTime || Date.now();
 	
 	if(this.isMoving && !this._cancelMove) {
 		this._cancelMove = true;
-		this._requestedNewPosition = new THREE.Vector2(x, y);
+		this._requestedNewPath = [x0, y0, x1, y1, moveStartTime];
 		return true;
 	}
+	
+	var path, displayPath;
+	var costPath, costDisplayPath;
+	
+	var dirty = this.gatPosition.x != x0 || this.gatPosition.y != y0;
+	
+	if(dirty) {
 		
-	var path = this.findPath(
-		this.gatPosition.x, 
-		this.gatPosition.y, 
-		x, 
-		y
+		path = this.findPath(x0, y0, x1, y1);
+		
+		if(path == null) {
+			console.warn("SpriteActor: Unable to move player");
+			return false;
+		}
+		
+		costPath = this.getPathMovementCost(path);
+		
+	}
+	
+	displayPath = this.findPath(
+		this.gatPosition.x, this.gatPosition.y, 
+		x1, y1
 	);
 	
+	if(displayPath == null) {
+		
+		// In case we for some reason can't move to target tile from 
+		// current display position
+	
+		console.warn("SpriteActor: Can't move from current position ", this.gatPosition.x, this.gatPosition.y,"to ", x1, y1);
+				
+		this.SetGatPosition(x0, y0);
+		return this.MoveToGatPosition(x0, y0, x1, y1, moveStartTime);
+	}
+	
+	costDisplayPath = this.getPathMovementCost(displayPath);
+	
+	if(Math.abs(costDisplayPath - costPath) > 10 * SpriteActor.MOVE_COST) {
+		
+		// If the disparity is too great just teleport to the correct 
+		// position before moving
+		
+		console.warn("SpriteActor: Hard lag?");
+		
+		this.SetGatPosition(x0, y0);
+		return this.MoveToGatPosition(x0, y0, x1, y1, moveStartTime);
+		
+	}
+	
+	if(costDisplayPath <= 0)
+		// On the rare case when we are lagged onto the right position
+		return true;
+	
+	if(!dirty) {
+	
+		path = displayPath;
+		costPath = costDisplayPath;
+	
+	}
+	
+	var timeElapsed = Math.max(Date.now() - moveStartTime, 0);
+	var tilesElapsed = Math.min(timeElapsed / this.movementSpeed, costPath - 1);
+	var speedFactor = (costPath - tilesElapsed) / costDisplayPath;
+
+	return this.MovePath(displayPath, speedFactor);
+
+};
+
+SpriteActor.prototype.MovePath = function(path, speedFactor) {
+	
+	speedFactor = speedFactor || 1.0;
+	
 	if(path && path.length > 1) {
+		
 		if(!this.isMoving) {
 			
 			// Find how much time has elapsed from the move start
 			
-			this.movementTime = Math.max(Date.now() - moveStartTime, 0);
-			
-			this.isMoving = true;
+			this.movementTime = 0;
 		}
-		// Remove 
+		
+		this.isMoving = true;
+		
+		// Remove current tile from destination tiles
+		
 		path.splice(0, 1);
+		
 		this.movementPath = path;
+		this.movementPathSpeedFactor = speedFactor;
+		
 		this.Direction = this.getDirectionFromCellChange(this.gatPosition, this.movementPath[0]);
+		
 		return true;
 	}
 	
@@ -320,9 +396,8 @@ SpriteActor.prototype.gatToMapPosition = function( position ) {
 	
 	var v = this.mapInstance.mapCoordinateToPosition( position.x + 0.5, position.y + 0.5 );
 	
-	//v.y = -this.mapInstance.gatFileObject.getBlockAvgDepth(this.gatPosition.x, this.gatPosition.y) + 0.5; // currentGatPosition
+	// Get height in the middle of the GAT cell and align a little above ground
 	
-	// Get height in the middle of the GAT cell
 	v.y = -this.mapInstance.subGatPositionToMapHeight( position.x, position.y, 0.5, 0.5 ) + 0.5;
 	
 	return v;
@@ -379,29 +454,6 @@ SpriteActor.prototype.mixNodePositionsToMapCoordinate = function(srcPosition, ds
 	
 };
 
-/**
- * Get the time cost factor of moving between two neighboring GAT nodes.
- *
- * @param {THREE.Vector2} src - Source GAT tile 
- * @param {THREE.Vector2} dst - Destination GAT tile
- * @returns {Number} - Movement cost factor
- *
- */
-SpriteActor.prototype.GetTileMovementCostFactor = function(src, dst) {
-
-	var dx = Math.abs(dst.x - src.x);
-	var dy = Math.abs(dst.y - src.y);
-	
-	var delta = dx + dy;
-	
-	if(delta > 2) {
-		console.warn("SpriteActor: Movement cost should be calculated between neighboring tiles");
-	}
-	
-	return delta >= 2 ? 1.4 : 1.0;
-
-};
-
 SpriteActor.prototype.UpdatePosition = function() {
 	
 	if(this.isMoving) {
@@ -417,8 +469,10 @@ SpriteActor.prototype.UpdatePosition = function() {
 			
 			var nNode = this.movementPath[0];
 			
-			var movementCost = this.movementSpeed * this.GetTileMovementCostFactor(this.gatPosition, nNode);
+			var tileMoveCostFactor = this.getTileMovementCost(this.gatPosition, nNode) / SpriteActor.MOVE_COST;
 			
+			var movementCost = this.movementSpeed * tileMoveCostFactor * this.movementPathSpeedFactor;
+						
 			while(this.movementTime >= movementCost) {
 				
 				if(this.movementPath.length < 1) {
@@ -433,16 +487,19 @@ SpriteActor.prototype.UpdatePosition = function() {
 				if(this._cancelMove) {
 					// If movement stop requested, do so now that we've 
 					// reached a new tile...
-					if(this._requestedNewPosition) {
-						this.MoveToGatPosition(
-							this._requestedNewPosition.x,
-							this._requestedNewPosition.y
-						);
+					
+					var pathData = this._requestedNewPath;
+					
+					if(pathData) {
+						
+						this.MoveToGatPosition.apply(this, this._requestedNewPath);
+						
 					} else {
 						this.movementPath = [];
 					}
+					
+					this._requestedNewPath = null;
 					this._cancelMove = false;
-					this._requestedNewPosition = null;
 				}
 				
 				nNode = this.movementPath[0] || this.gatPosition;
@@ -453,7 +510,9 @@ SpriteActor.prototype.UpdatePosition = function() {
 				}
 				
 				// Update cost of movement
-				movementCost = this.movementSpeed * this.GetTileMovementCostFactor(this.gatPosition, nNode);
+				
+				tileMoveCostFactor = this.getTileMovementCost(this.gatPosition, nNode) / SpriteActor.MOVE_COST;
+				movementCost = this.movementSpeed * tileMoveCostFactor * this.movementPathSpeedFactor;
 				
 			}
 			
@@ -469,11 +528,56 @@ SpriteActor.prototype.UpdatePosition = function() {
 	
 };
 
+SpriteActor.MOVE_COST = 10;
+SpriteActor.MOVE_DIAGONAL_COST = 14;
+
+
+/**
+ * Get the time cost factor of moving between two neighboring GAT nodes.
+ *
+ * @param {THREE.Vector2} src - Source GAT tile 
+ * @param {THREE.Vector2} dst - Destination GAT tile
+ * @returns {Number} - Movement cost factor
+ *
+ */
+SpriteActor.prototype.getTileMovementCost = function(src, dst) {
+
+	var dx = Math.abs(dst.x - src.x);
+	var dy = Math.abs(dst.y - src.y);
+	
+	var delta = dx + dy;
+	
+	if(delta > 2) {
+		console.warn("SpriteActor: Movement cost should be calculated between neighboring tiles");
+	}
+	
+	return delta >= 2 ? SpriteActor.MOVE_DIAGONAL_COST : SpriteActor.MOVE_COST;
+
+};
+
+SpriteActor.prototype.getPathMovementCost = function(path) {
+	
+	if(!(path instanceof Array))
+		return -1;
+	
+	if(path.length == 1)
+		return 0;
+	
+	var cost = 0;
+	
+	for(var i = 1; i < path.length; i++) {
+		cost += this.getTileMovementCost(path[i-1], path[i]);
+	};
+	
+	return cost;
+
+};
+
 // A* path search
 SpriteActor.prototype.findPath = function(x0, y0, x1, y1) {
 
-	var MOVE_COST = 10;
-	var MOVE_DIAGONAL_COST = 14;
+	var MOVE_COST = SpriteActor.MOVE_COST;
+	var MOVE_DIAGONAL_COST = SpriteActor.MOVE_DIAGONAL_COST;
 
 	var gat = this.mapInstance.gatFileObject;
 	
@@ -1229,7 +1333,7 @@ SpriteActor.prototype.showNameLabel = function() {
 
 SpriteActor.prototype.hideNameLabel = function() {
 
-	if(!this._nameLabelGenerated)
+	if(!this._nameLabelGenerated || !this.nameLabelSprite)
 		return;
 
 	this.nameLabelSprite.visible = false;
