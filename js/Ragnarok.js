@@ -409,6 +409,11 @@ Ragnarok.prototype.loadSceneAfter = function() {
 	if(Settings.music && rswName in mp3NameTable) {
 		SoundPlayer.playBgm(mp3NameTable[rswName]);
 	}
+	
+	// Dereference objects
+	
+	MemoryHelper.dereferenceProcessedObjects();
+	MemoryHelper.dereferenceCachedObjects();
 			
 	// Start rendering
 	this.graphics.scene.Start();

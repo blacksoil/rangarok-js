@@ -16,6 +16,9 @@ MapLoader.prototype = Object.create(EventHandler.prototype);
 
 MapLoader.prototype.derefTempObjects = function() {
 	this.rsmAtlasObject = null;
+	this.rsmFileObjects = null;
+	this.rswFileObject = null;
+	this.rswModelObjects = null;
 };
 
 MapLoader.prototype.reset = function() {
@@ -1991,22 +1994,10 @@ MapLoader.prototype.start = function() {
 	
 	var animate;
 	
-	//var composer = new THREE.EffectComposer( this.renderer );
-	//composer.addPass( new THREE.RenderPass( this.scene, this.camera ) );
-	// strength, kernelSize, sigma, resolution
-	//var effect = new THREE.BloomPass(1.15, 5, 0.2, 1024);
-	//effect.enabled = false;
-	//composer.addPass( effect );
-	//var copyPass = new THREE.ShaderPass( THREE.CopyShader );
-	//copyPass.renderToScreen = true;
-	//composer.addPass( copyPass );
-	//this.composer = composer;
-	
 	animate = (function() {
 		
 		var now = Date.now()
 		var dt = now - last;
-		//controls.update( dt*0.01 );
 		last = now;
 		
 		if(this.running) {
@@ -2014,11 +2005,8 @@ MapLoader.prototype.start = function() {
 			this.controls.Update( dt );
 			
 			this.renderer.render(this.scene, this.camera);
-			//this.composer.render( dt );
 			
 			if(colorPick && now - lastColorPick >= this.colorPickingInterval) {
-			
-				//console.log("color picking");
 			
 				this.setWorldDisplay(false); // hide all world objects
 				THREE.Sprite.PickingMode = 1; // uuugh -_-"
@@ -2108,33 +2096,73 @@ MapLoader.prototype.stop = function() {
 	
 	document.body.removeChild(this.renderer.domElement);
 	
-	// Maybe unload?
-	//ragnarok.graphics.scene.loader.scene.__objects
+	this.unload();
 	
 };
 
-MapLoader.prototype.switchMap = function(mapName) {
-	
-	var ref = this;
-	
-	ref.stop();
-	ref.loadMap(mapName).then(function() {
-		console.log("MAP LOADED; READY TO START");
-		ref.start();
-	});
-	
-};
+MapLoader.prototype.unloadObject = function(obj) {
 
-
-function Tick(msg, id) {
-	id = id || 0;
-	if(Tick.time[id]) {
-		console.warn("(Time) " + msg + ": " + (Date.now() - Tick.time[id]) + "ms");
+	if(obj.material instanceof THREE.Material) {
+		
+		if(obj.material instanceof THREE.MeshFaceMaterial) {
+			
+			for(var i = 0; i < obj.material.materials.length; i++) {
+			
+				obj.material.materials[i].dispose();
+			
+			}
+			
+		}
+		
+		obj.material.dispose();
 	}
-	Tick.time[id] = Date.now();
-}
+	
+	if(obj.geometry instanceof THREE.Geometry) {
+		
+		obj.geometry.dispose();
+		
+	}
+	
+	if(obj.dispose)
+		obj.dispose();
 
-Tick.time = [];
+};
+
+MapLoader.prototype.unload = function() {
+
+	// Remove all objects from scene
+		
+	while(this.scene.__objects.length > 0) {
+		
+		var o = this.scene.__objects[0];
+		
+		if(o.children.length > 0) {
+			
+			while(o.children.length > 0) {
+				this.unloadObject(o.children[0]);
+				o.remove(o.children[0]);
+			}
+			
+		}
+		
+		this.unloadObject(o);
+		
+		this.scene.remove(this.scene.__objects[0]);
+	}
+
+};
+
+//MapLoader.prototype.switchMap = function(mapName) {
+	
+//	var ref = this;
+	
+//	ref.stop();
+//	ref.loadMap(mapName).then(function() {
+//		console.log("MAP LOADED; READY TO START");
+//		ref.start();
+//	});
+	
+//};
 
 MapLoader.prototype._setFogFar = function(value) {
 	if(!this.scene || !this.scene.fog) {
@@ -2302,7 +2330,7 @@ MapLoader.prototype.loadMap = function(worldResourceName) {
 		console.warn("Initial render took " + (Date.now() - t0) + "ms");
 		
 		// Clear any loading data here
-		//this.derefTempObjects();
+		this.derefTempObjects();
 		
 		onDone.success();
 	}).bind(this));
