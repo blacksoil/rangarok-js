@@ -415,7 +415,7 @@ var start = function() {
 			mapLoader.start();
 			
 			mapLoader.attachEventListener("OnPCRequestMove", function(pos) {
-				obj.MoveToGatPosition(pos.x, pos.y, Date.now());
+				obj.MoveToGatPosition(obj.gatPosition.x, obj.gatPosition.y, pos.x, pos.y, Date.now());
 			});
 			
 			// Remove background from GUI

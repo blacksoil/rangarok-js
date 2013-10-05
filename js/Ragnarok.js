@@ -23,6 +23,9 @@ var Ragnarok = function( document ) {
 	
 	});
 	
+	// Purge old files every three minutes (minimum age 6 minutes)
+	//MemoryHelper.setPurgeInterval(360, 180 * 1000);
+	
 	window.ragnarok = this;
 	
 };
@@ -294,6 +297,21 @@ Ragnarok.prototype.setupSessionHandlers = function() {
 		);
 		
 	}).bind(this));
+	
+	this.session.attachEventListener("OnActorAttacked", (function(attackData) {
+		
+		
+		console.warn("Actor " + attackData.GID + " attacks " + attackData.targetGID, attackData);
+		
+		this.graphics.scene.ActorAttack(
+			attackData.GID,
+			attackData.targetGID,
+			attackData.attackMT,
+			attackData.attackedMT
+		);
+		
+	}).bind(this));
+
 	
 	this.session.attachEventListener("OnActorMovement", (function(session_actor) {
 		

@@ -288,6 +288,37 @@ var PacketEventHandlers = [
 	
 	}],
 	
+	[["PACKET_ZC_NOTIFY_ACT2"], function( struct ) {
+	
+		///     0 = damage [ damage: total damage, div: amount of hits, damage2: assassin dual-wield damage ]
+		///     1 = pick up item
+		///     2 = sit down
+		///     3 = stand up
+		///     4 = damage (endure)
+		///     5 = (splash?)
+		///     6 = (skill?)
+		///     7 = (repeat damage?)
+		///     8 = multi-hit damage
+		///     9 = multi-hit damage (endure)
+		///     10 = critical hit
+		///     11 = lucky dodge
+		///     12 = (touch skill?)
+	
+		if(struct.action == 0 || struct.action == 11 || struct.action == 10) {
+			
+			this.AttackActor(
+				struct.GID, struct.targetGID, struct.attackMT, 
+				struct.attackedMT, struct.count, struct.damage,
+				struct.leftDamage, struct.startTime
+			);
+			
+		} else {
+			console.warn("Unimplemented action " + struct.action);
+		}
+	
+	
+	}],
+	
 	// Keepalive response
 	
 	[["PACKET_ZC_NOTIFY_TIME"], function( struct ) {

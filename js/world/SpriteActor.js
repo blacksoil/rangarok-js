@@ -28,6 +28,10 @@ var SpriteActor = function(mapInstance, name) {
 	this.movementPathSpeedFactor = 1.0;
 	
 	this.movementSpeed = 150;
+	
+	this.attackDelay = 300;
+	this.damageDelay = 300;
+	
 	this.lastUpdate = -1;
 	this.movementTime = 0;
 	this.moveStartTime = 0;
@@ -87,9 +91,11 @@ SpriteActor.Types = {
 SpriteActor.BaseActionIndices = {
 	STAND: 0,
 	WALK: 1,
+	IDLE: 0,
 	ATTACK: 2,
 	HURT1: 3,
-	DIE: 4
+	HURT2: 3,
+	DIE: 4,
 };
 
 SpriteActor.PlayerActionIndices = {
@@ -97,7 +103,7 @@ SpriteActor.PlayerActionIndices = {
 	WALK: 1,
 	SIT: 2,
 	PICK: 3,
-	ACTION: 4, // 
+	IDLE: 4, // 
 	ATTACK: 5,
 	HURT1: 6,
 	HURT2: 7,
@@ -167,9 +173,32 @@ SpriteActor.prototype.__defineGetter__('Action', function() {
 	return this.action;
 });
 
+SpriteActor.prototype.ResetMotionTime = function() {
+
+	for(var i in this.attachments) {
+		this.attachments[i].timeElapsed = 0;
+		this.attachments[i].frameId = 0;
+	}
+	
+};
+
 SpriteActor.prototype.__defineSetter__('Action', function(value) {
-	this.action = value;
+	
+	if(this.action != value) {
+		this.ResetMotionTime();
+		this.action = value;
+	}
+	
 });
+
+// Face in the direction of target actor
+SpriteActor.prototype.SetDirectionTargetActor = function(targetActor) {
+	
+	this.Direction = this.getDirectionFromCellChange(
+		this.gatPosition,
+		targetActor.gatPosition
+	);
+};
 
 SpriteActor.prototype.__defineSetter__('Direction', function(value) {
 	this.standingDirection = value % 8;
@@ -184,6 +213,13 @@ SpriteActor.prototype.__defineGetter__('motion', function() {
 	return this.action * 8 + this.motionDirection;
 });
 
+SpriteActor.prototype.__defineSetter__("AttackMotionSpeed", function(value) {
+	this.attackDelay = value;
+});
+
+SpriteActor.prototype.__defineSetter__("DamageMotionSpeed", function(value) {
+	this.damageDelay = value;
+});
 
 SpriteActor.prototype.__defineSetter__("MovementSpeed", function(value) {
 	this.movementSpeed = value;
@@ -279,6 +315,12 @@ SpriteActor.prototype.MoveToGatPosition = function(x0, y0, x1, y1, moveStartTime
 		
 		costPath = this.getPathMovementCost(path);
 		
+	}
+	
+	if(dirty && (this.gatPosition.x <= 0 && this.gatPosition.y <= 0)) {
+
+		this.SetGatPosition(x0, y0);
+
 	}
 	
 	displayPath = this.findPath(
@@ -877,6 +919,10 @@ SpriteActor.prototype.UpdateAttachment = function(deltaTime, attachmentType, mot
 		motion = this.motion;
 	}
 	
+	if(actFileObject.actions.length <= motion) {
+		console.warn("Attacment " + attachmentType + " doesn't have motion " + motion);
+	}
+	
 	var nMotionFrames = actFileObject.actions[motion].length;
 	
 	// Ensure motion frame ID isn't out of bounds
@@ -968,11 +1014,28 @@ SpriteActor.prototype.UpdateAttachment = function(deltaTime, attachmentType, mot
 	// if attacking, use aMotion
 	// if walking, use aMotion or speed?
 	
-	if(this.action == this.ActionSet.WALK) {
-		//delay = 2 * this.movementSpeed / actFileObject.delays[motion];
-		delay = 2 * 10 * actFileObject.delays[motion] * (this.movementSpeed / 150);
+	var baseDelay = 25 * actFileObject.delays[motion];
+	
+	if(this.Action == this.ActionSet.WALK) {
+	
+		delay = baseDelay * (this.movementSpeed / 150);
+	
+	} else if(this.Action == this.ActionSet.ATTACK) {
+	
+		//delay = 2 * 10 * actFileObject.delays[motion] * (this.attackDelay / 150);
+		//delay = this.attackDelay;
+		delay = this.attackDelay / nMotionFrames;
+	
+	} else if(this.Action == this.ActionSet.HURT1) {
+	
+		//delay = 2 * 10 * actFileObject.delays[motion] * (this.damageDelay / 150);
+		delay = this.damageDelay / nMotionFrames;
+		//delay = baseDelay * (this.damageDelay / 150);
+		
 	} else {
-		delay = actFileObject.delays[motion] * 25;
+	
+		delay = baseDelay;
+	
 	}
 	
 	delay = Math.max(1, delay);
@@ -984,7 +1047,11 @@ SpriteActor.prototype.UpdateAttachment = function(deltaTime, attachmentType, mot
 		
 		if(nextFrameId >= numFrames) {
 			
-			if(this.AnimationRepeat) {
+			if(this.Action == this.ActionSet.ATTACK || this.Action == this.ActionSet.HURT1) {
+			
+				this.Action = this.ActionSet.IDLE;
+			
+			} else if(this.AnimationRepeat) {
 				attachment.frameId = nextFrameId % numFrames;
 			}
 			

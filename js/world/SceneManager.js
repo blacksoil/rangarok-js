@@ -88,6 +88,33 @@ SceneManager.prototype.SetEntityPosition = function(GID, x, y) {
 
 };
 
+SceneManager.prototype.ActorAttack = function(GID, targetGID, attackMT, attackedMT) {
+
+	if(!this.entityMap.has(GID)) {
+		console.warn("SceneManager: Attacker doesn't exist");
+		return;
+	}
+	
+	if(!this.entityMap.has(targetGID)) {
+		console.warn("SceneManager: Attacked doesn't exist");
+		return;
+	}
+	
+	var attacker = this.entityMap.get(GID);
+	var attacked = this.entityMap.get(targetGID);
+	
+	attacker.AttackMotionSpeed = attackMT;
+	attacker.Action = attacker.ActionSet.ATTACK;
+	attacker.SetDirectionTargetActor(attacked);
+	
+	if(attackedMT > 0) {
+		attacked.DamageMotionSpeed = attackedMT;
+		attacked.Action = attacked.ActionSet.HURT1;	
+		//attacked.SetDirectionTargetActor(attacker);
+	}
+
+};
+
 SceneManager.prototype.MoveEntityPosition = function(GID, x, y, x1, y1, moveStartTime) {
 
 	if(!this._sceneReady)
@@ -260,6 +287,9 @@ SceneManager.prototype.updateActorDisplay = function(actor, charInfo) {
 		if(charInfo.accessory3 > 0) // mid
 			this.changePcActorDisplay(actor, charInfo, GameVar.ACCESSORY3, charInfo.accessory3);
 	
+		if(charInfo.weapon > 0) // mid
+			this.changePcActorDisplay(actor, charInfo, GameVar.WEAPON, charInfo.accessory3);
+	
 	} else if(type == SpriteActor.Types.MONSTER) {
 	
 		this.changeMonsterDisplay(actor, charInfo);
@@ -350,7 +380,18 @@ SceneManager.prototype.changePcActorDisplay = function(actor, charInfo, varID, v
 				SpriteActor.Attachment.MID
 			);
 			break;
-		
+		case GameVar.WEAPON:
+			this.createActorAttachment(
+				actor,
+				PathHelper.getWeaponResPath(charInfo.weapon, charInfo.job, charInfo.sex),
+				SpriteActor.Attachment.WEAPON
+			);
+			this.createActorAttachment(
+				actor,
+				PathHelper.getWeaponEffectResPath(charInfo.weapon, charInfo.job, charInfo.sex),
+				SpriteActor.Attachment.WEAPON_EFFECT
+			);
+			break;
 		default:
 			console.warn("SceneManager: a spoaijda oijeqoj");
 			break;
