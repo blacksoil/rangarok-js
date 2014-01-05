@@ -44,13 +44,17 @@ function initProxy(src, dest) {
         });
 
         tcp.on('data', function(data) {
-            console.log("TCP <> WS (%d) -> %s", uid, data);
+            var packet_id = data.readUInt16LE(0, true);
+
+            console.log("TCP <> WS (%d): 0x%s -> %s", uid, packet_id.toString(16), data);
 
             wsocket.send(data, {binary: true});
         });
 
         wsocket.on('message', function(m,flags) {
-            console.log("WS <> TCP (%d) -> %s", uid, m);
+            var packet_id = m.readUInt16LE(0, true);
+
+            console.log("WS <> TCP (%d): 0x%s -> %s", uid, packet_id.toString(16), m);
                 
             tcp.write(m);
         });
