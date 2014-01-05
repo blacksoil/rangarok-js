@@ -5,5 +5,6 @@
 # iconv should do just fine.
 
 for file in ../data/*.txt; do
-    iconv -f ISO-8859-1 -t utf-8 "$file" -o "${file%.txt}.txt"
+    iconv -f ISO-8859-1 -t utf-8 "$file" -o "${file}.tmp"
+    mv "${file}.tmp" "${file}"
 done
