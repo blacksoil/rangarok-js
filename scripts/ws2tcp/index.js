@@ -47,16 +47,26 @@ function initProxy(src, dest) {
             var packet_id = data.readUInt16LE(0, true);
 
             console.log("TCP <> WS (%d): 0x%s -> %s", uid, packet_id.toString(16), data);
-
-            wsocket.send(data, {binary: true});
+            
+            try {
+                wsocket.send(data, {binary: true});
+            }
+            catch(e) {
+                console.error("TCP <> WS (%d): Failed to send", uid);
+            }
         });
 
         wsocket.on('message', function(m,flags) {
             var packet_id = m.readUInt16LE(0, true);
 
             console.log("WS <> TCP (%d): 0x%s -> %s", uid, packet_id.toString(16), m);
-                
-            tcp.write(m);
+            
+            try {
+                tcp.write(m);
+            }
+            catch(e) {
+                console.error("WS <> TCP (%d): Failed to send", uid);
+            }
         });
 
         tcp.on('close', function(had_error) {
